@@ -1,11 +1,14 @@
+from typing import Optional, List
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
 import numpy as np
 import pandas as pd
-
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from . import SPCTrace, draw_spc_matplotlib
-import factors
+import spc.factors as factors
 
 
 class XRTraces:

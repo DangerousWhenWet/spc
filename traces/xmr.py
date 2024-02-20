@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
 
 from . import SPCTrace, draw_spc_matplotlib
-import factors
+import spc.factors as factors
 
 
 class XMRTraces:
