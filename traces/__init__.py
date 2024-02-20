@@ -121,3 +121,10 @@ def draw_spc_matplotlib(ax, trace:SPCTrace, y_label:Optional[str]=None):
     ax.plot(trace.data.index, trace.data, marker='o', color='black')
     if y_label:
         ax.set_ylabel(y_label)
+
+
+def hex_to_rgba(hex_color:str, a:float):
+    if a > 1.0:
+        a /= 255.0
+    r,g,b = tuple(int(hex_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+    return f"rgba({r}, {g}, {b}, {a})"

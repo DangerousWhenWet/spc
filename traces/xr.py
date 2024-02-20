@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from . import SPCTrace, draw_spc_matplotlib
+from . import SPCTrace, draw_spc_matplotlib, hex_to_rgba
 import spc.factors as factors
 
 
@@ -30,6 +30,62 @@ class XRTraces:
             centerline = grand_mean,
             sigma = (ANTIBIAS_A2 * r_bar)/3
         )
+
+
+    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', x_fig_kwargs:Optional[Dict]=None, r_fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None,):
+        x_fig_kwargs, r_fig_kwargs = x_fig_kwargs or {}, r_fig_kwargs or {}
+        show_weco_rules = show_weco_rules or []
+
+        y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """<span style="text-decoration:overline">x</span>""" + '</b>'
+        y2_title = '<b>' + (f"{yaxis_titles[1]}, " if yaxis_titles else '') + r"R" + '</b>'
+        fig = make_subplots(
+            rows=2, row_heights=[0.5, 0.5], cols=1, shared_xaxes=True, vertical_spacing=0.02,
+        )
+
+        # Set other cosmetic/presentation stuff
+        fig.update_layout(
+            template=plotly_theme,
+            margin={'l':0, 'r':0, 't':0, 'b':0},
+            yaxis_title=y1_title, yaxis2_title=y2_title,
+            paper_bgcolor='rgba(0,0,0,0)'
+        )
+        fig.update_xaxes(type='category', categoryorder='category ascending')
+        if xaxis_title:
+            fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
+
+        # Plot the upper and lower traces
+        for trace, row_number in ((self.x, 1), (self.r, 2)):
+            if 2 in show_weco_rules:
+                if event_slices := list(trace.get_weco_event_slices(2)):
+                    points = pd.concat( event_slices )
+                    fig.add_trace(go.Scatter(x=points.index, y=points, showlegend=False, mode='lines', line=dict(color=hex_to_rgba('#FF7700', 0.500), width=15)), row=row_number, col=1)
+            
+            if 3 in show_weco_rules: #BUG: condense_recurring_events sometimes doesn't work for "wide" rules like this
+                if event_slices := list(trace.get_weco_event_slices(3)):
+                    points = pd.concat( event_slices )
+                    fig.add_trace(go.Scatter(x=points.index, y=points, showlegend=False, mode='lines', line=dict(color=hex_to_rgba('#FFFF00', 0.500), width=10)), row=row_number, col=1)
+            
+            if 4 in show_weco_rules:
+                if event_slices := list(trace.get_weco_event_slices(4)):
+                    points = pd.concat( event_slices )
+                    fig.add_trace(go.Scatter(x=points.index, y=points, showlegend=False, mode='lines', line=dict(color=hex_to_rgba('#2A52BD', 0.500), width=7)), row=row_number, col=1)
+            
+            if 1 in show_weco_rules:
+                if event_slices := list(trace.get_weco_event_slices(1)):
+                    points = pd.concat( event_slices )
+                    fig.add_trace(go.Scatter(x=points.index, y=points, showlegend=False, mode='markers', marker=dict(color=hex_to_rgba('#FF0000', 0.667), size=20)), row=row_number, col=1)
+
+            fig.add_trace(go.Scatter(
+                x=trace.data.index, y=trace.data, showlegend=False, **x_fig_kwargs
+            ), row=row_number, col=1)
+            for value, line_dict, label in [
+                        (trace.centerline, dict(width=3, dash='solid', color='grey'), 'Average'),
+                        (trace.centerline + 3 * trace.sigma, dict(width=2, dash='dash', color='grey'), 'UCL'),
+                        (trace.centerline - 3 * trace.sigma, dict(width=2, dash='dash', color='grey'), 'LCL'),
+                    ]:
+                fig.add_hline(y=value, line=line_dict, annotation_text=f"{label}: {value:.03f}", row=row_number, col=1)
+
+        return fig
 
 
 if __name__ == '__main__':
