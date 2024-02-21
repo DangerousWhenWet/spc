@@ -1,26 +1,50 @@
 import math
-from typing import Optional
+from typing import Optional, List, Dict
 
-import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-from . import SPCTrace, draw_spc_matplotlib
-import spc.factors
+from . import SPCTrace, draw_spc_matplotlib, draw_spc_plotly
+import spc.factors as factors
 
 
 class PTrace(SPCTrace):
-    def __init__(self, data:pd.Series, sample_size:Optional[int]=None, allow_variable_sample_size:bool=False):
+    def __init__(self, data:pd.Series, subgroup_size:Optional[int]=None, allow_variable_subgroup_size:bool=False):
         #TODO: allow variable sample sizes
-        if not allow_variable_sample_size and sample_size is None:
+        if not allow_variable_subgroup_size and subgroup_size is None:
             raise ValueError("If you have fixed sample size, you need to provide `sample_size` kwarg")
 
         if min(data)<0 or max(data)>1.0:
             raise ValueError("You should provide data series in the form 'proportion defective' or 'proportion OK' ranging [0.0, 1.0]")
-        self.n = sample_size
+        self.n = subgroup_size
         self.data = data
         self.centerline = self.data.mean()
         self.sigma = math.sqrt(  (self.centerline * (1 - self.centerline) ) / self.n )
+
+    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_title:Optional[str]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None,):
+        fig_kwargs = fig_kwargs or {}
+        show_weco_rules = show_weco_rules or []
+
+        y_title = '<b>' + (f"{yaxis_title}, " if yaxis_title else '') + """<span style="text-decoration:overline">x</span>""" + '</b>'
+        fig = make_subplots(rows=1,cols=1)
+
+        # Set other cosmetic/presentation stuff
+        fig.update_layout(
+            template=plotly_theme, margin={'l':0, 'r':0, 't':0, 'b':0}, paper_bgcolor='rgba(0,0,0,0)',
+            yaxis_title=y_title
+        )
+        fig.update_xaxes(type='category', categoryorder='category ascending')
+        if xaxis_title:
+            fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>")
+
+        # Plot the upper and lower traces
+        draw_spc_plotly(fig, self, show_weco_rules, **fig_kwargs)
+
+        return fig
 
 
 if __name__ == '__main__':

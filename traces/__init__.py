@@ -175,6 +175,6 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
                 (trace.centerline + 3 * trace.sigma, dict(width=2, dash='dash', color='grey'), 'UCL'),
                 (trace.centerline - 3 * trace.sigma, dict(width=2, dash='dash', color='grey'), 'LCL'),
             ]:
-        fig.add_hline(y=value, line=line_dict, annotation_text=f"{label}: {value:.03f}", row=row_number, col=column_number)
+        fig.add_hline(y=value, line=line_dict, annotation_text=f"{label}: {value:.04g}", row=row_number, col=column_number)
 
 
