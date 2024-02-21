@@ -1,16 +1,30 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
+
+
+def hex_to_rgba(hex_color:str, a:float):
+    if a > 1.0:
+        a /= 255.0
+    r,g,b = tuple(int(hex_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+    return f"rgba({r}, {g}, {b}, {a})"
 
 
 class SPCTrace:
-    ZONE_VISUALIZATION_DEFINITIONS = {
+    ZONE_MATPLOTLIB_VISUALIZATION_DEFINITIONS = {
         'a': {'color': 'red', 'linestyle': 'dotted'},
         'b': {'color': 'orange', 'linestyle': 'dotted'},
         'c': {'color': 'yellow', 'linestyle': 'dotted'},
         'center': {'color': 'lime', 'linestyle': 'solid'}
     } # for debug, testing
+    RULE_PLOTLY_VISUALIZATION_DEFINITIONS = {
+        1: dict(color=hex_to_rgba('#FF0000', 0.667), size=20),
+        2: dict(color=hex_to_rgba('#FF7700', 0.500), width=15),
+        3: dict(color=hex_to_rgba('#FFFF00', 0.500), width=10),
+        4: dict(color=hex_to_rgba('#2A52BD', 0.500), width=7)
+    }
 
     def __init__(self, data:pd.Series, centerline:float, sigma:float):
         self.data = data
@@ -75,7 +89,8 @@ class SPCTrace:
             args=(zone_low, zone_high, 4)
         ).fillna(0)
         if condense_recurring_events:
-            return SPCTrace._condense_recurring_events(hits)
+            cleaned_hits = SPCTrace._condense_recurring_events(hits)
+            return cleaned_hits
         else:
             return hits.astype(bool)
 
@@ -113,7 +128,7 @@ class SPCTrace:
 
 
 def draw_spc_matplotlib(ax, trace:SPCTrace, y_label:Optional[str]=None):
-    for zone, definition in SPCTrace.ZONE_VISUALIZATION_DEFINITIONS.items():
+    for zone, definition in SPCTrace.ZONE_MATPLOTLIB_VISUALIZATION_DEFINITIONS.items():
         zone_low, zone_high = trace.get_zone(zone)
         ax.axhline(zone_high, color=definition['color'], linestyle=definition['linestyle'], label=f"Zone {zone.upper()}" if zone in 'abc' else None)
         if zone in 'abc':
@@ -123,8 +138,43 @@ def draw_spc_matplotlib(ax, trace:SPCTrace, y_label:Optional[str]=None):
         ax.set_ylabel(y_label)
 
 
-def hex_to_rgba(hex_color:str, a:float):
-    if a > 1.0:
-        a /= 255.0
-    r,g,b = tuple(int(hex_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-    return f"rgba({r}, {g}, {b}, {a})"
+def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List[int]]=None, row_number:int=1, column_number:int=1, **kwargs):
+    if 2 in show_weco_rules:
+        if event_slices := list(trace.get_weco_event_slices(2)):
+            points = pd.concat( event_slices )
+            points = points[ ~points.index.duplicated(keep='first') ] # duplicate indices when the left and right edges of two back-to-back event slices overlap
+            points = points.reindex_like(trace.data)
+            fig.add_trace(go.Scatter(x=points.index, y=points, connectgaps=False, showlegend=False, mode='lines', line=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[2]), row=row_number, col=column_number)
+    
+    if 3 in show_weco_rules:
+        if event_slices := list(trace.get_weco_event_slices(3)):
+            points = pd.concat( event_slices )
+            points = points[ ~points.index.duplicated(keep='first') ] # duplicate indices when the left and right edges of two back-to-back event slices overlap
+            points = points.reindex_like(trace.data)
+            fig.add_trace(go.Scatter(x=points.index, y=points, connectgaps=False, showlegend=False, mode='lines', line=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[3]), row=row_number, col=column_number)
+    
+    if 4 in show_weco_rules:
+        if event_slices := list(trace.get_weco_event_slices(4)):
+            points = pd.concat( event_slices )
+            points = points[ ~points.index.duplicated(keep='first') ] # duplicate indices when the left and right edges of two back-to-back event slices overlap
+            points = points.reindex_like(trace.data)
+            fig.add_trace(go.Scatter(x=points.index, y=points, connectgaps=False, showlegend=False, mode='lines', line=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[4]), row=row_number, col=column_number)
+    
+    if 1 in show_weco_rules:
+        if event_slices := list(trace.get_weco_event_slices(1)):
+            points = pd.concat( event_slices )
+            points = points[ ~points.index.duplicated(keep='first') ] # duplicate indices when the left and right edges of two back-to-back event slices overlap
+            points = points.reindex_like(trace.data)
+            fig.add_trace(go.Scatter(x=points.index, y=points, showlegend=False, mode='markers', marker=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[1]), row=row_number, col=column_number)
+
+    fig.add_trace(go.Scatter(
+        x=trace.data.index, y=trace.data, showlegend=False, **kwargs
+    ), row=row_number, col=column_number)
+    for value, line_dict, label in [
+                (trace.centerline, dict(width=3, dash='solid', color='grey'), 'Average'),
+                (trace.centerline + 3 * trace.sigma, dict(width=2, dash='dash', color='grey'), 'UCL'),
+                (trace.centerline - 3 * trace.sigma, dict(width=2, dash='dash', color='grey'), 'LCL'),
+            ]:
+        fig.add_hline(y=value, line=line_dict, annotation_text=f"{label}: {value:.03f}", row=row_number, col=column_number)
+
+

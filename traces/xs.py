@@ -1,10 +1,13 @@
+from typing import Optional, List, Dict
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-
-from . import SPCTrace, draw_spc_matplotlib
+from . import SPCTrace, draw_spc_matplotlib, draw_spc_plotly
 import spc.factors as factors
 
 
@@ -28,6 +31,28 @@ class XSTraces:
             sigma = (ANTIBIAS_A3 * s_bar)/3
         )
 
+    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None,):
+        fig_kwargs = fig_kwargs or {}
+        show_weco_rules = show_weco_rules or []
+
+        y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """<span style="text-decoration:overline">x</span>""" + '</b>'
+        y2_title = '<b>' + (f"{yaxis_titles[1]}, " if yaxis_titles else '') + r"R" + '</b>'
+        fig = make_subplots( rows=2, row_heights=[0.5, 0.5], cols=1, shared_xaxes=True, vertical_spacing=0.02,)
+
+        # Set other cosmetic/presentation stuff
+        fig.update_layout(
+            template=plotly_theme, margin={'l':0, 'r':0, 't':0, 'b':0}, paper_bgcolor='rgba(0,0,0,0)',
+            yaxis_title=y1_title, yaxis2_title=y2_title, 
+        )
+        fig.update_xaxes(type='category', categoryorder='category ascending')
+        if xaxis_title:
+            fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
+
+        # Plot the upper and lower traces
+        for trace, row_number in ((self.x, 1), (self.s, 2)):
+            draw_spc_plotly(fig, trace, show_weco_rules, row_number, **fig_kwargs)
+
+        return fig
 
 if __name__ == '__main__':
     np.random.seed(908)
