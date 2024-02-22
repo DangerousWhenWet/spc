@@ -31,7 +31,7 @@ class XMRTraces:
         self.xaxis_proxy = xaxis_proxy
 
 
-    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None):
+    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None, force_categorical:bool=False):
         fig_kwargs = fig_kwargs or {}
         show_weco_rules = show_weco_rules or []
 
@@ -53,7 +53,8 @@ class XMRTraces:
                 ticktext=proxy_sampled,
                 row=2, col=1
             )
-        #fig.update_xaxes(type='category', categoryorder='category ascending')
+        if force_categorical:
+            fig.update_xaxes(type='category', categoryorder='category ascending')
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
 
