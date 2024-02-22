@@ -13,15 +13,13 @@ import spc.factors as factors
 
 
 class PTrace(SPCTrace):
-    def __init__(self, data:pd.Series, subgroup_size:Optional[int]=None, allow_variable_subgroup_size:bool=False):
+    def __init__(self, data:pd.Series, data_column:str, groupby_column:str, subgroup_size:Optional[int]=None, allow_variable_subgroup_size:bool=False):
         #TODO: allow variable sample sizes
         if not allow_variable_subgroup_size and subgroup_size is None:
             raise ValueError("If you have fixed sample size, you need to provide `sample_size` kwarg")
 
-        if min(data)<0 or max(data)>1.0:
-            raise ValueError("You should provide data series in the form 'proportion defective' or 'proportion OK' ranging [0.0, 1.0]")
         self.n = subgroup_size
-        self.data = data
+        self.data = data.groupby(groupby_column)[data_column].mean()
         self.centerline = self.data.mean()
         self.sigma = math.sqrt(  (self.centerline * (1 - self.centerline) ) / self.n )
 
