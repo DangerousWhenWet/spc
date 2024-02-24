@@ -44,7 +44,7 @@ class XSTraces:
             template=plotly_theme, margin={'l':0, 'r':0, 't':0, 'b':0}, paper_bgcolor='rgba(0,0,0,0)',
             yaxis_title=y1_title, yaxis2_title=y2_title, 
         )
-        fig.update_xaxes(type='category', categoryorder='category ascending')
+
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
 

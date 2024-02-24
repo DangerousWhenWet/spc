@@ -35,7 +35,7 @@ class PTrace(SPCTrace):
             template=plotly_theme, margin={'l':0, 'r':0, 't':0, 'b':0}, paper_bgcolor='rgba(0,0,0,0)',
             yaxis_title=y_title
         )
-        fig.update_xaxes(type='category', categoryorder='category ascending')
+
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>")
 
