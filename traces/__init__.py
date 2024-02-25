@@ -3,6 +3,8 @@ from typing import Literal, Optional, List
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.colors import qualitative as qualitative_color_scales
+D3 = qualitative_color_scales.D3
 
 
 def hex_to_rgba(hex_color:str, a:float):
@@ -20,10 +22,10 @@ class SPCTrace:
         'center': {'color': 'lime', 'linestyle': 'solid'}
     } # for debug, testing
     RULE_PLOTLY_VISUALIZATION_DEFINITIONS = {
-        1: dict(color=hex_to_rgba('#FF0000', 0.667), size=20),
-        2: dict(color=hex_to_rgba('#FF7700', 0.500), width=15),
-        3: dict(color=hex_to_rgba('#FFFF00', 0.500), width=10),
-        4: dict(color=hex_to_rgba('#2A52BD', 0.500), width=7)
+        1: dict(line_color=hex_to_rgba(D3[3], 0.75), line_width=2, color=hex_to_rgba('#FFFFFF', 0.0), size=20),
+        2: dict(color=hex_to_rgba(D3[1], 0.750), width=12),
+        3: dict(color=hex_to_rgba(D3[4], 0.500), width=12),
+        4: dict(color=hex_to_rgba(D3[9], 0.500), width=12)
     }
 
     def __init__(self, data:pd.Series, centerline:float, sigma:float):
@@ -171,7 +173,7 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
     rule1_marker_colors = rule1_points.notna().replace({True: 'red', False: 'green'})
     print(rule1_marker_colors)
     fig.add_trace(go.Scatter(
-        x=trace.data.index, y=trace.data, showlegend=False, marker_line_color=rule1_marker_colors, marker_line_width=2, **kwargs
+        x=trace.data.index, y=trace.data, showlegend=False, marker_line_color=rule1_marker_colors, marker_line_width=1, **kwargs
     ), row=row_number, col=column_number)
     for value, line_dict, label in [
                 (trace.centerline, dict(width=3, dash='solid', color='grey'), 'Average'),
