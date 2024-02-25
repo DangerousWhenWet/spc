@@ -40,7 +40,7 @@ class PTrace(SPCTrace):
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>")
 
         # Plot the upper and lower traces
-        draw_spc_plotly(fig, self, show_weco_rules, **fig_kwargs)
+        draw_spc_plotly(fig, self, show_weco_rules, clamp_control_limits=(0.0, 1.0), **fig_kwargs)
 
         return fig
 

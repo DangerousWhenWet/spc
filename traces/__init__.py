@@ -1,4 +1,4 @@
-from typing import Literal, Optional, List
+from typing import Literal, Optional, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -6,6 +6,9 @@ import plotly.graph_objects as go
 from plotly.colors import qualitative as qualitative_color_scales
 D3 = qualitative_color_scales.D3
 
+
+def clamp(value:float, minimum=float('-Infinity'), maximum=float('Infinity')):
+    return max(minimum, min(value, maximum))
 
 def hex_to_rgba(hex_color:str, a:float):
     if a > 1.0:
@@ -140,7 +143,7 @@ def draw_spc_matplotlib(ax, trace:SPCTrace, y_label:Optional[str]=None):
         ax.set_ylabel(y_label)
 
 
-def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List[int]]=None, row_number:int=1, column_number:int=1, **kwargs):
+def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List[int]]=None, row_number:int=1, column_number:int=1, clamp_control_limits:Optional[Tuple[float]]=None, **kwargs):
     if 2 in show_weco_rules:
         if event_slices := list(trace.get_weco_event_slices(2)):
             points = pd.concat( event_slices )
@@ -169,16 +172,25 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
         rule1_points = rule1_points.reindex_like(trace.data)
         if 1 in show_weco_rules:
             fig.add_trace(go.Scatter(x=rule1_points.index, y=rule1_points, showlegend=False, mode='markers', marker=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[1]), row=row_number, col=column_number)
+    else:
+        rule1_points = pd.Series([np.nan]).reindex_like(trace.data)
 
     rule1_marker_colors = rule1_points.notna().replace({True: 'red', False: 'green'})
-    print(rule1_marker_colors)
     fig.add_trace(go.Scatter(
         x=trace.data.index, y=trace.data, showlegend=False, marker_line_color=rule1_marker_colors, marker_line_width=1, **kwargs
     ), row=row_number, col=column_number)
+    
+    if clamp_control_limits:
+        ucl = clamp(trace.centerline + 3 * trace.sigma, *clamp_control_limits)
+        lcl = clamp(trace.centerline - 3 * trace.sigma, *clamp_control_limits)
+    else:
+        ucl = trace.centerline + 3 * trace.sigma
+        lcl = trace.centerline - 3 * trace.sigma
+    
     for value, line_dict, label in [
                 (trace.centerline, dict(width=3, dash='solid', color='grey'), 'Average'),
-                (trace.centerline + 3 * trace.sigma, dict(width=2, dash='dash', color='grey'), 'UCL'),
-                (trace.centerline - 3 * trace.sigma, dict(width=2, dash='dash', color='grey'), 'LCL'),
+                (ucl, dict(width=2, dash='dash', color='grey'), 'UCL'),
+                (lcl, dict(width=2, dash='dash', color='grey'), 'LCL'),
             ]:
         fig.add_hline(y=value, line=line_dict, annotation_text=f"{label}: {value:.04g}", row=row_number, col=column_number)
 

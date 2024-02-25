@@ -59,8 +59,8 @@ class XMRTraces:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
 
         # Plot the upper and lower traces
-        for trace, row_number in ((self.x, 1), (self.mr, 2)):
-            draw_spc_plotly(fig, trace, show_weco_rules, row_number, **fig_kwargs)
+        for trace, row_number, clamp_limits in [(self.x, 1, None), (self.mr, 2, (0, float('Infinity')))]:
+            draw_spc_plotly(fig, trace, show_weco_rules, row_number, clamp_control_limits=clamp_limits, **fig_kwargs)
 
         return fig
 
