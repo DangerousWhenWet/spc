@@ -36,7 +36,7 @@ class XSTraces:
         show_weco_rules = show_weco_rules or []
 
         y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """<span style="text-decoration:overline">x</span>""" + '</b>'
-        y2_title = '<b>' + (f"{yaxis_titles[1]}, " if yaxis_titles else '') + r"R" + '</b>'
+        y2_title = '<b>' + (f"{yaxis_titles[1]}, " if yaxis_titles else '') + r"S" + '</b>'
         fig = make_subplots( rows=2, row_heights=[0.5, 0.5], cols=1, shared_xaxes=True, vertical_spacing=0.02,)
 
         # Set other cosmetic/presentation stuff

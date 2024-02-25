@@ -35,7 +35,7 @@ class XMRTraces:
         fig_kwargs = fig_kwargs or {}
         show_weco_rules = show_weco_rules or []
 
-        y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """<span style="text-decoration:overline">x</span>""" + '</b>'
+        y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """X""" + '</b>'
         y2_title = '<b>' + (f"{yaxis_titles[1]}, " if yaxis_titles else '') + r"mR" + '</b>'
         fig = make_subplots( rows=2, row_heights=[0.5, 0.5], cols=1, shared_xaxes=True, vertical_spacing=0.02,)
 

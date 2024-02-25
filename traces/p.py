@@ -27,7 +27,7 @@ class PTrace(SPCTrace):
         fig_kwargs = fig_kwargs or {}
         show_weco_rules = show_weco_rules or []
 
-        y_title = '<b>' + (f"{yaxis_title}, " if yaxis_title else '') + """<span style="text-decoration:overline">x</span>""" + '</b>'
+        y_title = '<b>' + (f"{yaxis_title}, " if yaxis_title else '') + """%-conforms""" + '</b>'
         fig = make_subplots(rows=1,cols=1)
 
         # Set other cosmetic/presentation stuff
