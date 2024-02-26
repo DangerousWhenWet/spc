@@ -161,21 +161,26 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
             points = pd.concat( event_slices )
             points = points[ ~points.index.duplicated(keep='first') ] # duplicate indices when the left and right edges of two back-to-back event slices overlap
             points = points.reindex_like(trace.data)
-            fig.add_trace(go.Scatter(x=points.index, y=points, connectgaps=False, showlegend=False, mode='lines', line=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[2]), row=row_number, col=column_number)
+            fig.add_trace(
+                go.Scatter(x=points.index, y=points, connectgaps=False, showlegend=False, mode='lines', line=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[2], hoverinfo='none'),
+            row=row_number, col=column_number)
     
     if 3 in show_weco_rules:
         if event_slices := list(trace.get_weco_event_slices(3)):
             points = pd.concat( event_slices )
             points = points[ ~points.index.duplicated(keep='first') ] # duplicate indices when the left and right edges of two back-to-back event slices overlap
             points = points.reindex_like(trace.data)
-            fig.add_trace(go.Scatter(x=points.index, y=points, connectgaps=False, showlegend=False, mode='lines', line=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[3]), row=row_number, col=column_number)
+            fig.add_trace(
+                go.Scatter(x=points.index, y=points, connectgaps=False, showlegend=False, mode='lines', line=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[3], hoverinfo='none'), 
+            row=row_number, col=column_number)
     
     if 4 in show_weco_rules:
         if event_slices := list(trace.get_weco_event_slices(4)):
             points = pd.concat( event_slices )
             points = points[ ~points.index.duplicated(keep='first') ] # duplicate indices when the left and right edges of two back-to-back event slices overlap
             points = points.reindex_like(trace.data)
-            fig.add_trace(go.Scatter(x=points.index, y=points, connectgaps=False, showlegend=False, mode='lines', line=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[4]), row=row_number, col=column_number)
+            fig.add_trace(go.Scatter(x=points.index, y=points, connectgaps=False, showlegend=False, mode='lines', line=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[4], hoverinfo='none'),
+            row=row_number, col=column_number)
     
     # We always show a subtle version of Rule 1 (see below color masks), but make it more obvious if user asked to plot Rule 1
     if event_slices := list(trace.get_weco_event_slices(1)):
@@ -183,7 +188,9 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
         rule1_points = rule1_points[ ~rule1_points.index.duplicated(keep='first') ] # duplicate indices when the left and right edges of two back-to-back event slices overlap
         rule1_points = rule1_points.reindex_like(trace.data)
         if 1 in show_weco_rules:
-            fig.add_trace(go.Scatter(x=rule1_points.index, y=rule1_points, showlegend=False, mode='markers', marker=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[1]), row=row_number, col=column_number)
+            fig.add_trace(
+                go.Scatter(x=rule1_points.index, y=rule1_points, showlegend=False, mode='markers', marker=SPCTrace.RULE_PLOTLY_VISUALIZATION_DEFINITIONS[1], hoverinfo='none'),
+            row=row_number, col=column_number)
     else:
         rule1_points = pd.Series([np.nan]).reindex_like(trace.data)
 
