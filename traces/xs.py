@@ -12,7 +12,7 @@ import spc.factors as factors
 
 
 class XSTraces:
-    def __init__(self, data:pd.DataFrame, data_column:str, groupby_column:str, subgroup_size:int, xaxis_proxy:Optional[pd.Series]=None):
+    def __init__(self, data:pd.DataFrame, data_column:str, groupby_column:str, subgroup_size:int, xaxis_proxy:Optional[pd.Series]=None, reset_grouped_index=False):
         ANTIBIAS_B4 = factors.get_B4(n=subgroup_size)
         ANTIBIAS_A3 = factors.get_A3(n=subgroup_size)
         rational_subgroups = data.groupby(groupby_column)[data_column]
@@ -30,9 +30,12 @@ class XSTraces:
             centerline = grand_mean,
             sigma = (ANTIBIAS_A3 * s_bar)/3
         )
+        if reset_grouped_index:
+            self.x.data.reset_index(drop=True, inplace=True)
+            self.s.data.reset_index(drop=True, inplace=True)
         self.xaxis_proxy = xaxis_proxy
 
-    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None, force_categorical:bool=False):
+    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None):
         fig_kwargs = fig_kwargs or {}
         show_weco_rules = show_weco_rules or []
 
@@ -54,8 +57,7 @@ class XSTraces:
                 ticktext=proxy_sampled,
                 row=2, col=1
             )
-        if force_categorical:
-            fig.update_xaxes(type='category', categoryorder='category ascending')
+
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
 
