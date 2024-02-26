@@ -13,7 +13,7 @@ import spc.factors as factors
 
 
 class PTrace(SPCTrace):
-    def __init__(self, data:pd.Series, data_column:str, groupby_column:str, subgroup_size:Optional[int]=None, allow_variable_subgroup_size:bool=False):
+    def __init__(self, data:pd.Series, data_column:str, groupby_column:str, subgroup_size:Optional[int]=None, allow_variable_subgroup_size:bool=False, xaxis_proxy:Optional[pd.Series]=None):
         #TODO: allow variable sample sizes
         if not allow_variable_subgroup_size and subgroup_size is None:
             raise ValueError("If you have fixed sample size, you need to provide `sample_size` kwarg")
@@ -22,8 +22,9 @@ class PTrace(SPCTrace):
         self.data = data.groupby(groupby_column)[data_column].mean()
         self.centerline = self.data.mean()
         self.sigma = math.sqrt(  (self.centerline * (1 - self.centerline) ) / self.n )
+        self.xaxis_proxy = xaxis_proxy
 
-    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_title:Optional[str]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None,):
+    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_title:Optional[str]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None, force_categorical:bool=False):
         fig_kwargs = fig_kwargs or {}
         show_weco_rules = show_weco_rules or []
 
@@ -36,6 +37,16 @@ class PTrace(SPCTrace):
             yaxis_title=y_title
         )
 
+        if self.xaxis_proxy is not None:
+            proxy_sampled = self.xaxis_proxy.iloc[ np.linspace(0, len(self.xaxis_proxy)-1, num=min(25, len(self.data))) ]
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=proxy_sampled.index,
+                ticktext=proxy_sampled,
+                row=1, col=1
+            )
+        if force_categorical:
+            fig.update_xaxes(type='category', categoryorder='category ascending')
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>")
 

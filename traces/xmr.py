@@ -45,8 +45,7 @@ class XMRTraces:
             yaxis_title=y1_title, yaxis2_title=y2_title, 
         )
         if self.xaxis_proxy is not None:
-            #proxy_sampled = self.xaxis_proxy.iloc[ np.arange(1, len(self.xaxis_proxy), len(self.xaxis_proxy)//6) ]
-            proxy_sampled = self.xaxis_proxy.iloc[ np.linspace(0, len(self.xaxis_proxy)-1, num=25) ]
+            proxy_sampled = self.xaxis_proxy.iloc[ np.linspace(0, len(self.xaxis_proxy)-1, num=min(25, len(self.x.data))) ]
             fig.update_xaxes(
                 tickmode='array',
                 tickvals=proxy_sampled.index,

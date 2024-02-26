@@ -12,7 +12,7 @@ import spc.factors as factors
 
 
 class XSTraces:
-    def __init__(self, data:pd.DataFrame, data_column:str, groupby_column:str, subgroup_size:int):
+    def __init__(self, data:pd.DataFrame, data_column:str, groupby_column:str, subgroup_size:int, xaxis_proxy:Optional[pd.Series]=None):
         ANTIBIAS_B4 = factors.get_B4(n=subgroup_size)
         ANTIBIAS_A3 = factors.get_A3(n=subgroup_size)
         rational_subgroups = data.groupby(groupby_column)[data_column]
@@ -30,8 +30,9 @@ class XSTraces:
             centerline = grand_mean,
             sigma = (ANTIBIAS_A3 * s_bar)/3
         )
+        self.xaxis_proxy = xaxis_proxy
 
-    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None,):
+    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None, force_categorical:bool=False):
         fig_kwargs = fig_kwargs or {}
         show_weco_rules = show_weco_rules or []
 
@@ -45,6 +46,16 @@ class XSTraces:
             yaxis_title=y1_title, yaxis2_title=y2_title, 
         )
 
+        if self.xaxis_proxy is not None:
+            proxy_sampled = self.xaxis_proxy.iloc[ np.linspace(0, len(self.xaxis_proxy)-1, num=min(25, len(self.x.data))) ]
+            fig.update_xaxes(
+                tickmode='array',
+                tickvals=proxy_sampled.index,
+                ticktext=proxy_sampled,
+                row=2, col=1
+            )
+        if force_categorical:
+            fig.update_xaxes(type='category', categoryorder='category ascending')
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
 
