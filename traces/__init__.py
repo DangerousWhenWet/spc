@@ -32,6 +32,8 @@ class SPCTrace:
     }
 
     def __init__(self, data:pd.Series, centerline:float, sigma:float):
+        # if any(data.index.duplicated()):
+        #     raise ValueError(f"{self.__class__.__name__} for {data.name} has duplicates in index.\n{data[data.index.duplicated()]}")
         self.data = data
         self.centerline = centerline
         self.sigma = sigma
@@ -45,7 +47,7 @@ class SPCTrace:
         )
 
     
-    def get_weco_rule1_events(self, condense_recurring_events=False):
+    def get_weco_rule1_events(self, condense_recurring_events=False, as_reset_index=False):
         '''any single point beyond beyond ± 3σ'''
         zone_low, zone_high = self.get_zone('a')
         
@@ -53,7 +55,7 @@ class SPCTrace:
             return zone_low > x or x > zone_high
             
         hits = self.data.apply(rule1)
-        return hits
+        return hits.reset_index(drop=True) if as_reset_index else hits
 
     @staticmethod
     def _windowed_threshold_count(window, threshold_low, threshold_high, minimum_count):
@@ -124,10 +126,20 @@ class SPCTrace:
             4: (self.get_weco_rule4_events, 8),
         }
         rule_finder, lookback = switcher[rule_number]
-        events = self.data[rule_finder(condense_recurring_events=True)]
+        # timestamps can be ambiguous as indices -- they can be duplicated (rarely) -- treat them differently and use integer location within index instead
+        is_datetimeindex = pd.api.types.is_datetime64_any_dtype(self.data.index)
+        if is_datetimeindex:
+            events = self.data.reset_index(drop=True)[rule_finder(condense_recurring_events=True, as_reset_index=is_datetimeindex)]
+        else:
+            events = self.data[rule_finder(condense_recurring_events=True)]
 
+        # find integer location of the events within indices, so you can take integer "lookback" slices for multi-point events
         for event_idx, _ in events.items():
-            idx_position = self.data.index.get_loc(event_idx)+1
+            idx_position = self.data.index.get_loc(event_idx) if not is_datetimeindex else event_idx
+            # get_loc can do some unexpected things if your index contains duplicates and this `event_idx` happens to be one of the duplicates; be defensive about it (but you should get rid of duplicates before getting to this point...)
+            if not isinstance(idx_position, int):
+                raise ValueError(f"{self.__class__.__name__} for {self.data.name} has bad index while checking for WECO event {rule_number}. (Does the index have duplicates?)\n{idx_position=}")
+            idx_position += 1
             event_slice = self.data.iloc[idx_position - lookback: idx_position]
             yield event_slice
 
@@ -177,7 +189,7 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
 
     rule1_marker_colors = rule1_points.notna().replace({True: 'red', False: 'green'})
     fig.add_trace(go.Scatter(
-        x=trace.data.index, y=trace.data, showlegend=False, marker_line_color=rule1_marker_colors, marker_line_width=1, **kwargs
+        x=trace.data.index, y=trace.data, showlegend=False, marker_line_color=rule1_marker_colors, marker_line_width=2, **kwargs
     ), row=row_number, col=column_number)
     
     if clamp_control_limits:
