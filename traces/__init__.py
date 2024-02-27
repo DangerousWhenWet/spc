@@ -1,4 +1,4 @@
-from typing import Literal, Optional, List, Tuple
+from typing import Literal, Optional, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -7,8 +7,11 @@ from plotly.colors import qualitative as qualitative_color_scales
 D3 = qualitative_color_scales.D3
 
 
-def clamp(value:float, minimum=float('-Infinity'), maximum=float('Infinity')):
-    return max(minimum, min(value, maximum))
+def clamp(value:Union[float, pd.Series], minimum:Union[float, pd.Series]=float('-Infinity'), maximum:Union[float, pd.Series]=float('Infinity')):
+    if not isinstance(value, pd.Series):
+        return max(minimum, min(value, maximum))
+    else:
+        return value.clip(lower=minimum, upper=maximum)
 
 def hex_to_rgba(hex_color:str, a:float):
     if a > 1.0:
@@ -31,7 +34,7 @@ class SPCTrace:
         4: dict(color=hex_to_rgba(D3[9], 0.500), width=12)
     }
 
-    def __init__(self, data:pd.Series, centerline:float, sigma:float, name:Optional[str]=None):
+    def __init__(self, data:pd.Series, centerline:float, sigma:Union[float, pd.Series], name:Optional[str]=None):
         # if any(data.index.duplicated()):
         #     raise ValueError(f"{self.__class__.__name__} for {data.name} has duplicates in index.\n{data[data.index.duplicated()]}")
         self.data = data
@@ -40,7 +43,7 @@ class SPCTrace:
         self.name=name
 
     
-    def get_zone(self, zone:Literal['a', 'b', 'c', 'center']):
+    def get_zone(self, zone:Literal['a', 'b', 'c', 'center']) -> Tuple[Union[pd.Series, float], Union[pd.Series, float]]:
         multiple = {'a':3, 'b':2, 'c':1, 'center': 0}[zone]
         return (
             self.centerline - multiple * self.sigma,
@@ -51,11 +54,19 @@ class SPCTrace:
     def get_weco_rule1_events(self, condense_recurring_events=False, as_reset_index=False):
         '''any single point beyond beyond ± 3σ'''
         zone_low, zone_high = self.get_zone('a')
+        print(f"{zone_low=}, {zone_high=}")
         
-        def rule1(x):
-            return zone_low > x or x > zone_high
+        def rule1(row:pd.Series):
+            idx = row.iloc[0]
+            x = row.iloc[1]
+            #print(f"{row=}, {idx=}, {x=}")
+            #print(f"{zone_low[idx]=}, {zone_high[idx]=}")
             
-        hits = self.data.apply(rule1)
+            return (zone_low > x or x > zone_high) if not isinstance(self.k, pd.Series) else ((zone_low[idx] > x) or (x > zone_high[idx]))
+
+        hits = self.data.reset_index().apply(rule1, axis='columns')
+        hits.index = self.data.index
+        print(f"{hits=}")
         return hits.reset_index(drop=True) if as_reset_index else hits
 
     @staticmethod
@@ -207,12 +218,18 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
         ucl = trace.centerline + 3 * trace.sigma
         lcl = trace.centerline - 3 * trace.sigma
     
-    print(f"{lsl=}, {usl=}")
+    # If control limits have been defined for variable subgroup size, draw them as "staircase" lines
+    if isinstance(ucl, pd.Series):
+        fig.add_trace(go.Scatter(x=ucl.index, y=ucl, mode='lines', line=dict(width=2, dash='dash', color='grey'), showlegend=False,  line_shape='hvh'), row=row_number, col=column_number)
+    if isinstance(lcl, pd.Series):
+        fig.add_trace(go.Scatter(x=lcl.index, y=lcl, mode='lines', line=dict(width=2, dash='dash', color='grey'), showlegend=False,  line_shape='hvh'), row=row_number, col=column_number)
+
+    # Draw H-lines
     for value, line_dict, label in [
                 (trace.centerline, dict(width=3, dash='solid', color='grey'), 'Average'),
-                (ucl, dict(width=2, dash='dash', color='grey'), 'UCL'),
-                (lcl, dict(width=2, dash='dash', color='grey'), 'LCL'),
             ] \
+                + ([(ucl, dict(width=2, dash='dash', color='grey'), 'UCL')] if not isinstance(ucl, pd.Series) else []) \
+                + ([(lcl, dict(width=2, dash='dash', color='grey'), 'LCL')] if not isinstance(lcl, pd.Series) else []) \
                 + ([(lsl, dict(width=2, dash='dot', color='grey'), 'LSL'),] if not any((lsl is None, np.isneginf(lsl or np.nan))) else []) \
                 + ([(usl, dict(width=2, dash='dot', color='grey'), 'USL'),] if not any((usl is None, np.isposinf(usl or np.nan))) else []) :
         fig.add_hline(y=value, line=line_dict, annotation_text=f"{label}: {value:.04g}", row=row_number, col=column_number)
