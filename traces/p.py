@@ -13,10 +13,9 @@ import spc.factors as factors
 
 
 class PTrace(SPCTrace):
-    def __init__(self, data:pd.Series, data_column:str, grouper:str, subgroup_size:Optional[int]=None, allow_variable_subgroup_size:bool=False, reset_grouped_index:bool=False, xaxis_proxy:Optional[pd.Series]=None):
+    def __init__(self, data:pd.Series, data_column:str, grouper:str, subgroup_size:Optional[int]=None, reset_grouped_index:bool=False, xaxis_proxy:Optional[pd.Series]=None):
         #TODO: allow variable sample sizes
-        if not allow_variable_subgroup_size and subgroup_size is None:
-            raise ValueError("If you have fixed sample size, you need to provide `sample_size` kwarg")
+        allow_variable_subgroup_size = subgroup_size is None
 
         self.k = data.groupby(grouper).size() if allow_variable_subgroup_size else subgroup_size
         self.data = data.groupby(grouper)[data_column].mean()
@@ -104,7 +103,6 @@ if __name__ == '__main__':
         data = data,
         data_column = 'passed',
         grouper = 'group',
-        allow_variable_subgroup_size = USE_VARIABLE_GROUP_SIZES,
         subgroup_size = subgroup_sizes[0] if not USE_VARIABLE_GROUP_SIZES else None
     )
 
