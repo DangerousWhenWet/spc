@@ -35,8 +35,6 @@ class SPCTrace:
     }
 
     def __init__(self, data:pd.Series, centerline:float, sigma:Union[float, pd.Series], name:Optional[str]=None):
-        # if any(data.index.duplicated()):
-        #     raise ValueError(f"{self.__class__.__name__} for {data.name} has duplicates in index.\n{data[data.index.duplicated()]}")
         self.data = data
         self.centerline = centerline
         self.sigma = sigma
@@ -54,28 +52,28 @@ class SPCTrace:
     def get_weco_rule1_events(self, condense_recurring_events=False, as_reset_index=False):
         '''any single point beyond beyond ± 3σ'''
         zone_low, zone_high = self.get_zone('a')
-        print(f"{zone_low=}, {zone_high=}")
         
         def rule1(row:pd.Series):
             idx = row.iloc[0]
             x = row.iloc[1]
-            #print(f"{row=}, {idx=}, {x=}")
-            #print(f"{zone_low[idx]=}, {zone_high[idx]=}")
             
             return (zone_low > x or x > zone_high) if not isinstance(self.k, pd.Series) else ((zone_low[idx] > x) or (x > zone_high[idx]))
 
         hits = self.data.reset_index().apply(rule1, axis='columns')
         hits.index = self.data.index
-        print(f"{hits=}")
         return hits.reset_index(drop=True) if as_reset_index else hits
 
-    @staticmethod
-    def _windowed_threshold_count(window, threshold_low, threshold_high, minimum_count):
+    def _windowed_threshold_count(self, window, threshold_low, threshold_high, minimum_count):
         '''
         count how many values in the window are above or below given thresholds
         '''
-        count_beyond_low = (window < threshold_low).sum()
-        count_beyond_high = (window > threshold_high).sum()
+        print(f"{window=}, {window.index=}")
+        if isinstance(self.k, pd.Series):
+            count_beyond_low = (window < threshold_low[window.index]).sum()
+            count_beyond_high = (window > threshold_high[window.index]).sum()
+        else:
+            count_beyond_low = (window < threshold_low).sum()
+            count_beyond_high = (window > threshold_high).sum()
         return count_beyond_low >= minimum_count or count_beyond_high >= minimum_count
 
     @staticmethod
@@ -90,7 +88,7 @@ class SPCTrace:
         zone_low, zone_high = self.get_zone('b')
         
         hits = self.data.rolling(3).apply(
-            SPCTrace._windowed_threshold_count,
+            self._windowed_threshold_count,
             args=(zone_low, zone_high, 2)
         ).fillna(0)
         if condense_recurring_events:
@@ -104,7 +102,7 @@ class SPCTrace:
         zone_low, zone_high = self.get_zone('c')
         
         hits = self.data.rolling(5).apply(
-            SPCTrace._windowed_threshold_count,
+            self._windowed_threshold_count,
             args=(zone_low, zone_high, 4)
         ).fillna(0)
         if condense_recurring_events:

@@ -80,21 +80,21 @@ if __name__ == '__main__':
 
     # generate random subgroup means between given range, random subgroup stddev between given range
     USE_VARIABLE_GROUP_SIZES = True #<-- Edit me to toggle between fixed and variable subgroup sizes
-    num_subgroups = 15
+    num_subgroups = 30
     subgroup_means = np.random.uniform(90, 95, size=num_subgroups)
-    inaccuracies = np.random.uniform(0, -5, size=num_subgroups)
+    biases = np.random.uniform(0, -5, size=num_subgroups)
     subgroup_stddevs = np.random.uniform(1, 20, size=num_subgroups)
     subgroup_sizes = [random.choice(range(50, 100, 1)) for i in range(num_subgroups)] if USE_VARIABLE_GROUP_SIZES else [30]*num_subgroups
 
     # generate dummy data for each subgroup and then combine it all
     data_per_subgroup = []
-    for mean, stddev, size in zip(subgroup_means+inaccuracies, subgroup_stddevs, subgroup_sizes):
+    for mean, stddev, size in zip(subgroup_means+biases, subgroup_stddevs, subgroup_sizes):
         subgroup_data = pd.DataFrame({
-            'value': np.random.normal(loc=mean, scale=stddev, size=size),  # Generating 12 values for each subgroup
-            'group': np.repeat(len(data_per_subgroup) + 1, repeats=size),  # Assigning group numbers
+            'value': np.random.normal(loc=mean, scale=stddev, size=size),
+            'group': np.repeat(len(data_per_subgroup) + 1, repeats=size),
             'passed': np.nan
         })
-        subgroup_data['passed'] = (subgroup_data['value'] > 90) & \
+        subgroup_data['passed'] = (subgroup_data['value'] > 85) & \
             (subgroup_data['value'] < 95)
         data_per_subgroup.append(subgroup_data)
     data = pd.concat(data_per_subgroup, ignore_index=True)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     fig = p.to_plotly(
         xaxis_title='Group',
         yaxis_title='Pass Rate',
-        show_weco_rules=[1],
-        line_color='black'
+        show_weco_rules=[4],
+        line_color='black', mode='markers+lines', line_width=2
     )
     fig.show()
