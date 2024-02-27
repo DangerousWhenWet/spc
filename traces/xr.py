@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
@@ -36,8 +36,23 @@ class XRTraces:
         self.xaxis_proxy = xaxis_proxy
 
 
-    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None):
-        fig_kwargs = fig_kwargs or {}
+    @property
+    def traces(self):
+        return self.x, self.r
+
+
+    def to_plotly(
+        self,
+        xaxis_title: Optional[str] = None,
+        yaxis_titles: Optional[List[str]]=None,
+        plotly_theme: Optional[str] = 'seaborn',
+        show_weco_rules: Optional[List[int]] = None,
+        lsl: Optional[float]=None,
+        usl: Optional[float]=None,
+        hover_customdata: Optional[List[List[Union[float, pd.Series]]]] = None,
+        hover_template: Optional[List[str]] = None,
+        **kwargs
+    ) -> go.Figure:
         show_weco_rules = show_weco_rules or []
 
         y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """<span style="text-decoration:overline">x</span>""" + '</b>'
@@ -58,15 +73,14 @@ class XRTraces:
                 tickmode='array',
                 tickvals=proxy_sampled.index,
                 ticktext=proxy_sampled,
-                row=2, col=1
             )
 
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
 
         # Plot the upper and lower traces
-        for trace, row_number, clamp_limits in [(self.x, 1, None), (self.r, 2, (0, float('Infinity')))]:
-            draw_spc_plotly(fig, trace, show_weco_rules, row_number, clamp_control_limits=clamp_limits, **fig_kwargs)
+        for trace, row_number, clamp_limits, lsl, usl in [(self.x, 1, None, lsl, usl), (self.r, 2, (0, float('Infinity')), None, None)]:
+            draw_spc_plotly(fig, trace, show_weco_rules, row_number, clamp_control_limits=clamp_limits, lsl=lsl, usl=usl, hovertemplate=hover_template[row_number-1], customdata=hover_customdata[row_number-1], **kwargs)
 
         return fig
 

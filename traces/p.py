@@ -1,5 +1,5 @@
 import math
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
@@ -26,8 +26,18 @@ class PTrace(SPCTrace):
         self.sigma = math.sqrt(  (self.centerline * (1 - self.centerline) ) / self.n )
         self.xaxis_proxy = xaxis_proxy
 
-    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_title:Optional[str]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None):
-        fig_kwargs = fig_kwargs or {}
+    def to_plotly(
+        self,
+        xaxis_title: Optional[str] = None,
+        yaxis_title: Optional[str] = None,
+        plotly_theme: Optional[str] = 'seaborn',
+        show_weco_rules: Optional[List[int]] = None,
+        lsl: Optional[float]=None,
+        usl: Optional[float]=None,
+        hover_customdata: Optional[List[List[Union[float, pd.Series]]]] = None,
+        hover_template: Optional[List[str]] = None,
+        **kwargs
+    ) -> go.Figure:
         show_weco_rules = show_weco_rules or []
 
         y_title = '<b>' + (f"{yaxis_title}, " if yaxis_title else '') + """%-conforms""" + '</b>'
@@ -45,16 +55,20 @@ class PTrace(SPCTrace):
                 tickmode='array',
                 tickvals=proxy_sampled.index,
                 ticktext=proxy_sampled,
-                row=1, col=1
             )
 
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>")
 
         # Plot the upper and lower traces
-        draw_spc_plotly(fig, self, show_weco_rules, clamp_control_limits=(0.0, 1.0), **fig_kwargs)
+        draw_spc_plotly(fig, self, show_weco_rules, clamp_control_limits=(0.0, 1.0), lsl=lsl, usl=usl, hovertemplate=hover_template[0], customdata=hover_customdata[0], **kwargs)
 
         return fig
+
+
+    @property
+    def traces(self):
+        return self,
 
 
 if __name__ == '__main__':

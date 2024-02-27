@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
@@ -21,18 +21,35 @@ class XMRTraces:
         self.mr = SPCTrace(
             data = mr,
             centerline = mr_bar,
-            sigma = (ANTIBIAS_D4 * mr_bar - mr_bar)/3
+            sigma = (ANTIBIAS_D4 * mr_bar - mr_bar)/3,
+            name = 'mR'
         )
         self.x = SPCTrace(
             data = data,
             centerline = data.mean(),
-            sigma = (3/ANTIBIAS_d2 * mr_bar)/3
+            sigma = (3/ANTIBIAS_d2 * mr_bar)/3,
+            name = 'X'
         )
         self.xaxis_proxy = xaxis_proxy
+    
+    @property
+    def traces(self):
+        return self.x, self.mr
 
 
-    def to_plotly(self, xaxis_title:Optional[str]=None, yaxis_titles:Optional[List[str]]=None, plotly_theme:Optional[str]='seaborn', fig_kwargs:Optional[Dict]=None, show_weco_rules:Optional[List[int]]=None, force_categorical:bool=False):
-        fig_kwargs = fig_kwargs or {}
+    def to_plotly(
+            self,
+            xaxis_title:Optional[str]=None,
+            yaxis_titles:Optional[List[str]]=None,
+            plotly_theme:Optional[str]='seaborn',
+            show_weco_rules:Optional[List[int]]=None, 
+            force_categorical:bool=False,
+            lsl: Optional[float]=None,
+            usl: Optional[float]=None,
+            hover_customdata: Optional[List[List[Union[float, pd.Series]]]] = None,
+            hover_template: Optional[List[str]] = None,
+            **kwargs
+        ):
         show_weco_rules = show_weco_rules or []
 
         y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """X""" + '</b>'
@@ -58,8 +75,8 @@ class XMRTraces:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
 
         # Plot the upper and lower traces
-        for trace, row_number, clamp_limits in [(self.x, 1, None), (self.mr, 2, (0, float('Infinity')))]:
-            draw_spc_plotly(fig, trace, show_weco_rules, row_number, clamp_control_limits=clamp_limits, **fig_kwargs)
+        for trace, row_number, clamp_limits, lsl, usl in [(self.x, 1, None, lsl, usl), (self.mr, 2, (0, float('Infinity')), None, None)]:
+            draw_spc_plotly(fig, trace, show_weco_rules, row_number, lsl=lsl, usl=usl, clamp_control_limits=clamp_limits, customdata=hover_customdata[row_number-1], hovertemplate=hover_template[row_number-1], **kwargs)
 
         return fig
 

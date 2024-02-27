@@ -31,12 +31,13 @@ class SPCTrace:
         4: dict(color=hex_to_rgba(D3[9], 0.500), width=12)
     }
 
-    def __init__(self, data:pd.Series, centerline:float, sigma:float):
+    def __init__(self, data:pd.Series, centerline:float, sigma:float, name:Optional[str]=None):
         # if any(data.index.duplicated()):
         #     raise ValueError(f"{self.__class__.__name__} for {data.name} has duplicates in index.\n{data[data.index.duplicated()]}")
         self.data = data
         self.centerline = centerline
         self.sigma = sigma
+        self.name=name
 
     
     def get_zone(self, zone:Literal['a', 'b', 'c', 'center']):
@@ -155,7 +156,7 @@ def draw_spc_matplotlib(ax, trace:SPCTrace, y_label:Optional[str]=None):
         ax.set_ylabel(y_label)
 
 
-def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List[int]]=None, row_number:int=1, column_number:int=1, clamp_control_limits:Optional[Tuple[float]]=None, **kwargs):
+def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List[int]]=None, row_number:int=1, column_number:int=1, clamp_control_limits:Optional[Tuple[float]]=None, lsl:Optional[float]=None, usl:Optional[float]=None, **kwargs):
     if 2 in show_weco_rules:
         if event_slices := list(trace.get_weco_event_slices(2)):
             points = pd.concat( event_slices )
@@ -206,11 +207,14 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
         ucl = trace.centerline + 3 * trace.sigma
         lcl = trace.centerline - 3 * trace.sigma
     
+    print(f"{lsl=}, {usl=}")
     for value, line_dict, label in [
                 (trace.centerline, dict(width=3, dash='solid', color='grey'), 'Average'),
                 (ucl, dict(width=2, dash='dash', color='grey'), 'UCL'),
                 (lcl, dict(width=2, dash='dash', color='grey'), 'LCL'),
-            ]:
+            ] \
+                + ([(lsl, dict(width=2, dash='dot', color='grey'), 'LSL'),] if not any((lsl is None, np.isneginf(lsl or np.nan))) else []) \
+                + ([(usl, dict(width=2, dash='dot', color='grey'), 'USL'),] if not any((usl is None, np.isposinf(usl or np.nan))) else []) :
         fig.add_hline(y=value, line=line_dict, annotation_text=f"{label}: {value:.04g}", row=row_number, col=column_number)
 
 
