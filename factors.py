@@ -26,6 +26,8 @@ def get_d2(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     def func(x):
         ncdf = scipy.stats.norm.cdf(x)
         return 1 - (1 - ncdf)**n - (ncdf)**n
@@ -44,7 +46,9 @@ def get_d3(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
     d2 = get_d2(n)
+
     def func(x, y):
         ncdf_x = scipy.stats.norm.cdf(x)
         ncdf_y = scipy.stats.norm.cdf(y)
@@ -67,6 +71,8 @@ def get_c4(n:int) -> float:
                     Accessed April 21, 2023, from NIST/SEMATECH e-Handbook of Statistical Methods
                     website: https://www.itl.nist.gov/div898/handbook/pmc/section3/pmc321.htm.
     '''
+    if n < 2: return float('nan')
+
     def fractional_factorial(x:float):
         factors = [(x-i) for i in range(math.floor(x) + 1) if (x-i) > 0] + [math.sqrt(math.pi)]
         return functools.reduce(lambda l,r: l*r, factors)
@@ -88,6 +94,8 @@ def get_A(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('A', n):
         return cached_value
     else:
@@ -102,6 +110,8 @@ def get_A2(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('A2', n):
         return cached_value
     else:
@@ -116,6 +126,8 @@ def get_A3(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('A3', n):
         return cached_value
     else:
@@ -130,6 +142,8 @@ def get_B3(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('c4', n):
         return cached_value
     else:
@@ -145,6 +159,8 @@ def get_B4(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('B4', n):
         return cached_value
     else:
@@ -160,6 +176,8 @@ def get_B5(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('B5', n):
         return cached_value
     else:
@@ -175,6 +193,8 @@ def get_B6(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('B6', n):
         return cached_value
     else:
@@ -190,6 +210,8 @@ def get_D1(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('D1', n):
         return cached_value
     else:
@@ -207,6 +229,8 @@ def get_D2(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('D2', n):
         return cached_value
     else:
@@ -223,6 +247,8 @@ def get_D3(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('D3', n):
         return cached_value
     else:
@@ -240,6 +266,8 @@ def get_D4(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('D4', n):
         return cached_value
     else:
@@ -256,6 +284,8 @@ def get_E2(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+
     if cached_value := fetch_from_lookup_table('E2', n):
         return cached_value
     else:
@@ -270,6 +300,8 @@ def get_E3(n:int) -> float:
                     ASTM International, Manual on Presentation of Data and Control Chart Analysis - 8th Edition (2010),
                     Chapter 3, Supplement 3.A.
     '''
+    if n < 2: return float('nan')
+    
     if cached_value := fetch_from_lookup_table('E3', n):
         return cached_value
     else:
