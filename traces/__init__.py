@@ -69,8 +69,9 @@ class SPCTrace:
         '''
         count how many values in the window are above or below given thresholds
         '''
+        print(f"{window=}\n{threshold_low=}\n{threshold_high=}\n{minimum_count=}")
         # thresholds based on zones must be scalars if there are no subgroups (individuals trace) or if subgroup size is fixed, but they can be Series if subgroup size is variable
-        if any(  (self.n is None, isinstance(self.n, pd.Series))  ):
+        if any(  (self.n is None, not isinstance(self.n, pd.Series))  ):
             count_beyond_low = (window < threshold_low).sum()
             count_beyond_high = (window > threshold_high).sum()
         else:
