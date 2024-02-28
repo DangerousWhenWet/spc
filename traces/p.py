@@ -17,12 +17,12 @@ class PTrace(SPCTrace):
         #TODO: allow variable sample sizes
         allow_variable_subgroup_size = subgroup_size is None
 
-        self.k = data.groupby(grouper).size() if allow_variable_subgroup_size else subgroup_size
+        self.n = data.groupby(grouper).size() if allow_variable_subgroup_size else subgroup_size
         self.data = data.groupby(grouper)[data_column].mean()
         if reset_grouped_index:
             self.data.reset_index(drop=True, inplace=True)
         self.centerline = self.data.mean()
-        self.sigma = np.sqrt(  (self.centerline * (1 - self.centerline) ) / self.k ) if allow_variable_subgroup_size else math.sqrt( self.centerline * (1 - self.centerline) / self.k )
+        self.sigma = np.sqrt(  (self.centerline * (1 - self.centerline) ) / self.n ) if allow_variable_subgroup_size else math.sqrt( self.centerline * (1 - self.centerline) / self.n )
         self.xaxis_proxy = xaxis_proxy
 
     def to_plotly(

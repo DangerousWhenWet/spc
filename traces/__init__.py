@@ -57,7 +57,7 @@ class SPCTrace:
             idx = row.iloc[0]
             x = row.iloc[1]
             
-            return (zone_low > x or x > zone_high) if not isinstance(self.k, pd.Series) else ((zone_low[idx] > x) or (x > zone_high[idx]))
+            return (zone_low > x or x > zone_high) if not isinstance(self.n, pd.Series) else ((zone_low[idx] > x) or (x > zone_high[idx]))
 
         hits = self.data.reset_index().apply(rule1, axis='columns')
         hits.index = self.data.index
@@ -68,7 +68,7 @@ class SPCTrace:
         count how many values in the window are above or below given thresholds
         '''
         print(f"{window=}, {window.index=}")
-        if isinstance(self.k, pd.Series):
+        if isinstance(self.n, pd.Series):
             count_beyond_low = (window < threshold_low[window.index]).sum()
             count_beyond_high = (window > threshold_high[window.index]).sum()
         else:
