@@ -39,6 +39,7 @@ class SPCTrace:
         self.centerline = centerline
         self.sigma = sigma
         self.name=name
+        self.n = None # <-- Overwrite this in subclasses for traces that deal with rational subgroups
 
     
     def get_zone(self, zone:Literal['a', 'b', 'c', 'center']) -> Tuple[Union[pd.Series, float], Union[pd.Series, float]]:
@@ -57,7 +58,8 @@ class SPCTrace:
             idx = row.iloc[0]
             x = row.iloc[1]
             
-            return (zone_low > x or x > zone_high) if not isinstance(self.n, pd.Series) else ((zone_low[idx] > x) or (x > zone_high[idx]))
+            # zones must be scalars if there are no subgroups (individuals trace) or if subgroup size is fixed, but they can be Series if subgroup size is variable
+            return (zone_low > x or x > zone_high) if any(  (self.n is None, not isinstance(self.n, pd.Series))  ) else ((zone_low[idx] > x) or (x > zone_high[idx]))
 
         hits = self.data.reset_index().apply(rule1, axis='columns')
         hits.index = self.data.index
@@ -67,13 +69,13 @@ class SPCTrace:
         '''
         count how many values in the window are above or below given thresholds
         '''
-        print(f"{window=}, {window.index=}")
-        if isinstance(self.n, pd.Series):
-            count_beyond_low = (window < threshold_low[window.index]).sum()
-            count_beyond_high = (window > threshold_high[window.index]).sum()
-        else:
+        # thresholds based on zones must be scalars if there are no subgroups (individuals trace) or if subgroup size is fixed, but they can be Series if subgroup size is variable
+        if any(  (self.n is None, isinstance(self.n, pd.Series))  ):
             count_beyond_low = (window < threshold_low).sum()
             count_beyond_high = (window > threshold_high).sum()
+        else:
+            count_beyond_low = (window < threshold_low[window.index]).sum()
+            count_beyond_high = (window > threshold_high[window.index]).sum()
         return count_beyond_low >= minimum_count or count_beyond_high >= minimum_count
 
     @staticmethod
@@ -83,7 +85,7 @@ class SPCTrace:
         '''
         return ser.diff().shift(-1) == -1.0
     
-    def get_weco_rule2_events(self, condense_recurring_events=False):
+    def get_weco_rule2_events(self, condense_recurring_events=False, as_reset_index=False):
         '''2 out of 3 consecutive points beyond ± 2σ in the same direction'''
         zone_low, zone_high = self.get_zone('b')
         
@@ -92,12 +94,13 @@ class SPCTrace:
             args=(zone_low, zone_high, 2)
         ).fillna(0)
         if condense_recurring_events:
-            return SPCTrace._condense_recurring_events(hits)
+            hits = SPCTrace._condense_recurring_events(hits)
         else:
-            return hits.astype(bool)
+            hits = hits.astype(bool)
+        return hits.reset_index(drop=True) if as_reset_index else hits
 
 
-    def get_weco_rule3_events(self, condense_recurring_events=False):
+    def get_weco_rule3_events(self, condense_recurring_events=False, as_reset_index=False):
         '''4 out of 5 consecutive points beyond ± 1σ in the same direction'''
         zone_low, zone_high = self.get_zone('c')
         
@@ -107,12 +110,13 @@ class SPCTrace:
         ).fillna(0)
         if condense_recurring_events:
             cleaned_hits = SPCTrace._condense_recurring_events(hits)
-            return cleaned_hits
+            hits = cleaned_hits
         else:
-            return hits.astype(bool)
+            hits = hits.astype(bool)
+        return hits.reset_index(drop=True) if as_reset_index else hits
 
 
-    def get_weco_rule4_events(self, condense_recurring_events=False):
+    def get_weco_rule4_events(self, condense_recurring_events=False, as_reset_index=False):
         '''8 consecutive points beyond on the same side of centerline'''
 
         def rule4(window):
@@ -122,9 +126,10 @@ class SPCTrace:
             
         hits = self.data.rolling(8).apply(rule4).fillna(0)
         if condense_recurring_events:
-            return SPCTrace._condense_recurring_events(hits)
+            hits = SPCTrace._condense_recurring_events(hits)
         else:
-            return hits.astype(bool)
+            hits = hits.astype(bool)
+        return hits.reset_index(drop=True) if as_reset_index else hits
 
 
     def get_weco_event_slices(self, rule_number:int):
