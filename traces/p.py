@@ -49,6 +49,7 @@ class PTrace(SPCTrace):
             template=plotly_theme, margin={'l':0, 'r':0, 't':0, 'b':0}, paper_bgcolor='rgba(0,0,0,0)',
             yaxis_title=y_title
         )
+        fig.update_yaxes(range=[-0.05, 1.05], tickformat='.1%')
 
         if self.xaxis_proxy is not None:
             proxy_sampled = self.xaxis_proxy.iloc[ np.linspace(0, len(self.xaxis_proxy)-1, num=min(25, len(self.data))) ]
