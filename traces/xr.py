@@ -12,7 +12,7 @@ import spc.factors as factors
 
 
 class XRTraces: 
-    def __init__(self, data:pd.DataFrame, data_column:str, grouper:str, subgroup_size:int, xaxis_proxy:Optional[pd.Series]=None, reset_grouped_index=False):
+    def __init__(self, data:pd.DataFrame, data_column:str, grouper:str, subgroup_size:Optional[int]=None, xaxis_proxy:Optional[pd.Series]=None, reset_grouped_index=False):
         allow_variable_subgroup_size = subgroup_size is None
 
         self.n = data.groupby(grouper).size() if allow_variable_subgroup_size else subgroup_size
