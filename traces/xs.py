@@ -12,27 +12,35 @@ import spc.factors as factors
 
 
 class XSTraces:
-    def __init__(self, data:pd.DataFrame, data_column:str, groupby_column:str, subgroup_size:int, xaxis_proxy:Optional[pd.Series]=None, reset_grouped_index=False):
-        ANTIBIAS_B4 = factors.get_B4(n=subgroup_size)
-        ANTIBIAS_A3 = factors.get_A3(n=subgroup_size)
-        rational_subgroups = data.groupby(groupby_column)[data_column]
+    def __init__(self, data:pd.DataFrame, data_column:str, grouper:str, subgroup_size:int, xaxis_proxy:Optional[pd.Series]=None, reset_grouped_index=False):
+        allow_variable_subgroup_size = subgroup_size is None
+
+        self.n = data.groupby(grouper).size() if allow_variable_subgroup_size else subgroup_size
+        rational_subgroups = data.groupby(grouper)[data_column]
         s = rational_subgroups.std()
         s_bar = s.mean()
+        antibias_b4 = self.n.apply(factors.get_B4) if allow_variable_subgroup_size else factors.get_B4(n=self.n)
         self.s = SPCTrace(
             data = s,
             centerline = s_bar,
-            sigma = (ANTIBIAS_B4 * s_bar - s_bar)/3
+            sigma = (antibias_b4 * s_bar - s_bar)/3
         )
+
         x_bar = rational_subgroups.mean()
         grand_mean = x_bar.mean()
+        antibias_a3 = self.n.apply(factors.get_A3) if allow_variable_subgroup_size else factors.get_A3(n=self.n)
         self.x = SPCTrace(
             data = x_bar,
             centerline = grand_mean,
-            sigma = (ANTIBIAS_A3 * s_bar)/3
+            sigma = (antibias_a3 * s_bar)/3
         )
+
         if reset_grouped_index:
             self.x.data.reset_index(drop=True, inplace=True)
             self.s.data.reset_index(drop=True, inplace=True)
+            self.n.reset_index(drop=True, inplace=True)
+        self.s.n = self.n
+        self.x.n = self.n
         self.xaxis_proxy = xaxis_proxy
 
 
@@ -54,6 +62,8 @@ class XSTraces:
         **kwargs
     ) -> go.Figure:
         show_weco_rules = show_weco_rules or []
+        hover_customdata = hover_customdata or [None, None]
+        hover_template = hover_template or [None, None]
 
         y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """<span style="text-decoration:overline">x</span>""" + '</b>'
         y2_title = '<b>' + (f"{yaxis_titles[1]}, " if yaxis_titles else '') + r"S" + '</b>'
@@ -83,42 +93,39 @@ class XSTraces:
         return fig
 
 if __name__ == '__main__':
+    import random
+    random.seed(908)
     np.random.seed(908)
 
-    # generate random subgroup means between 70-90, random subgroup stddev between 5-30
-    num_subgroups = 20
-    subgroup_means = np.random.uniform(85, 95, size=num_subgroups)
-    subgroup_stddevs = np.random.uniform(1, 5, size=num_subgroups)
-    subgroup_size = 30
+    # generate random subgroup means between given range, random subgroup stddev between given range
+    USE_VARIABLE_GROUP_SIZES = True #<-- Edit me to toggle between fixed and variable subgroup sizes
+    num_subgroups = 30
+    subgroup_means = np.random.uniform(90, 95, size=num_subgroups)
+    biases = np.random.uniform(0, -5, size=num_subgroups)
+    subgroup_stddevs = np.random.uniform(1, 20, size=num_subgroups)
+    subgroup_sizes = [random.choice(range(50, 100, 1)) for i in range(num_subgroups)] if USE_VARIABLE_GROUP_SIZES else [30]*num_subgroups
 
     # generate dummy data for each subgroup and then combine it all
     data_per_subgroup = []
-    for mean, stddev in zip(subgroup_means, subgroup_stddevs):
+    for mean, stddev, size in zip(subgroup_means+biases, subgroup_stddevs, subgroup_sizes):
         subgroup_data = pd.DataFrame({
-            'value': np.random.normal(loc=mean, scale=stddev, size=subgroup_size),  # Generating 12 values for each subgroup
-            'group': np.repeat(len(data_per_subgroup) + 1, repeats=subgroup_size)  # Assigning group numbers
+            'value': np.random.normal(loc=mean, scale=stddev, size=size),
+            'group': np.repeat(len(data_per_subgroup) + 1, repeats=size),
         })
         data_per_subgroup.append(subgroup_data)
     data = pd.concat(data_per_subgroup, ignore_index=True)
-    with pd.option_context('display.max_rows', None):
-        print(data)
+    print(data)
 
-    xs = XSTraces(data, data_column='value', groupby_column='group', subgroup_size=subgroup_size)
-
-    def generate_xs(xs:XSTraces):
-        fig, (ax_x, ax_s) = plt.subplots(nrows=2, ncols=1, sharex=True)
-        _ = plt.subplots_adjust(hspace=0)
-        draw_spc_matplotlib(ax_x, xs.x, 'x̅')
-        draw_spc_matplotlib(ax_s, xs.s, 'S')
-        ax_s.xaxis.set_major_locator(mticks.MultipleLocator(5))
-        ax_s.xaxis.set_minor_locator(mticks.MultipleLocator(1))
-        ax_s.set_ylim([-0.05 * (ax_s.get_ylim()[1] - ax_s.get_ylim()[0]) , ax_s.get_ylim()[1]])
-
-        return ax_x, ax_s
-    
-    ax_x, ax_s = generate_xs(xs)
-    for event in xs.x.get_weco_event_slices(rule_number=2):
-        ax_x.plot(event.index, event, color='red', marker='o', zorder=2)
-    for event in xs.s.get_weco_event_slices(rule_number=2):
-        ax_s.plot(event.index, event, color='red', marker='o', zorder=2)
-    plt.show()
+    xs = XSTraces(
+        data = data,
+        data_column = 'value',
+        grouper = 'group',
+        subgroup_size = None,
+    )
+    fig = xs.to_plotly(
+        xaxis_title = 'Group',
+        yaxis_titles = ['Value', 'Standard Deviation'],
+        show_weco_rules=[4],
+        line_color='black', mode='markers+lines', line_width=2
+    )
+    fig.show()
