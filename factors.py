@@ -1,5 +1,6 @@
 import concurrent.futures as cf
 from dataclasses import dataclass
+from decimal import Decimal
 import functools
 import math
 import pathlib as pl
@@ -73,9 +74,9 @@ def get_c4(n:int) -> float:
     '''
     if n < 2: return float('nan')
 
-    def fractional_factorial(x:float):
-        factors = [(x-i) for i in range(math.floor(x) + 1) if (x-i) > 0] + [math.sqrt(math.pi)]
-        return functools.reduce(lambda l,r: l*r, factors)
+    def fractional_factorial(x: int) -> Decimal:
+        factors = [Decimal(x - i) for i in range(math.floor(x) + 1) if (x - i) > 0] + [Decimal(math.sqrt(math.pi))]
+        return functools.reduce(lambda l, r: l * r, factors, Decimal(1))
 
     if cached_value := fetch_from_lookup_table('c4', n):
         return cached_value
@@ -83,7 +84,7 @@ def get_c4(n:int) -> float:
         a = math.sqrt(2/(n-1))
         b = math.factorial(int(n/2-1)) if not n%2 else fractional_factorial(n/2-1)
         c = math.factorial(int((n-1)/2-1)) if not (n-1)%2 else fractional_factorial((n-1)/2-1)
-        return a * b / c
+        return Decimal(a) * Decimal(b) / Decimal(c)
 
 
 def get_A(n:int) -> float:
@@ -131,7 +132,7 @@ def get_A3(n:int) -> float:
     if cached_value := fetch_from_lookup_table('A3', n):
         return cached_value
     else:
-        return 3 / (get_c4(n) * math.sqrt(n))
+        return 3 / (get_c4(n) * Decimal(math.sqrt(n)))
 
 
 def get_B3(n:int) -> float:
@@ -148,7 +149,7 @@ def get_B3(n:int) -> float:
         return cached_value
     else:
         c4 = get_c4(n)
-        return max(0.0, 1 - (3/c4) * math.sqrt(1 - c4**2))
+        return max(0.0, 1 - (3/c4) * Decimal(math.sqrt(1 - c4**2)))
 
 
 def get_B4(n:int) -> float:
@@ -165,7 +166,7 @@ def get_B4(n:int) -> float:
         return cached_value
     else:
         c4 = get_c4(n)
-        return 1 + (3/c4) * math.sqrt(1 - c4**2)
+        return 1 + (3/c4) * Decimal(math.sqrt(1 - c4**2))
 
 
 def get_B5(n:int) -> float:
@@ -182,7 +183,7 @@ def get_B5(n:int) -> float:
         return cached_value
     else:
         c4 = get_c4(n)
-        return max(0.0, c4 - 3 * math.sqrt(1 - c4**2))
+        return max(0.0, c4 - 3 * Decimal(math.sqrt(1 - c4**2)))
 
 
 def get_B6(n:int) -> float:
@@ -199,7 +200,7 @@ def get_B6(n:int) -> float:
         return cached_value
     else:
         c4 = get_c4(n)
-        return c4 + 3 * math.sqrt(1 - c4**2)
+        return c4 + 3 * Decimal(math.sqrt(1 - c4**2))
 
 
 def get_D1(n:int) -> float:
@@ -377,7 +378,26 @@ def fetch_from_lookup_table(symbol:str, n:int) -> Optional[float]:
         warnings.warn("Lookup table has not been computed. Calculating all factors on-the-fly, which may be very slow. (Use `generate_lookup_table`.)", ComputationWarning)
     return None
 
+def calculate_spc_factors(n: int) -> Dict[str, float]:
+    factors = {
+        'A': get_A(n),
+        'A2': get_A2(n),
+        'A3': get_A3(n),
+        'B3': get_B3(n),
+        'B4': get_B4(n),
+        'B5': get_B5(n),
+        'B6': get_B6(n),
+        'D1': get_D1(n),
+        'D2': get_D2(n),
+        'D3': get_D3(n),
+        'D4': get_D4(n),
+        'E2': get_E2(n),
+        'E3': get_E3(n),
+        'd2': get_d2(n),
+        'd3': get_d3(n),
+        'c4': get_c4(n)
+    }
+    return factors
 
 if __name__ == "__main__":
-    generate_lookup_table(n_lower=2, n_upper=200)
-    #print(f"{get_d2(25)=}")
+    generate_lookup_table(n_lower=2, n_upper=400)
