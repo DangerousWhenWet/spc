@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Union
+from typing import Optional, List, Dict, Union, Iterable
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticks
@@ -12,13 +12,15 @@ import spc.factors as factors
 
 
 class XRTraces: 
-    def __init__(self, data:pd.DataFrame, data_column:str, grouper:str, subgroup_size:Optional[int]=None, xaxis_proxy:Optional[pd.Series]=None, reset_grouped_index=False):
-        allow_variable_subgroup_size = subgroup_size is None
+    def __init__(self, data:pd.DataFrame, data_column:str, grouper:str, subgroup_size:Optional[int]=None, xaxis_proxy:Optional[pd.Series]=None, reset_grouped_index=False, groups_for_limits:Optional[Iterable[str]] = None):
+        allow_variable_subgroup_size = subgroup_size is None and groups_for_limits is None
+        if groups_for_limits is not None and subgroup_size is None:
+            raise ValueError("If you want to use groups_for_limits, you must specify a fixed subgroup_size.")
 
         self.n = data.groupby(grouper).size() if allow_variable_subgroup_size else subgroup_size
         rational_subgroups = data.groupby(grouper)[data_column]
         r = rational_subgroups.max() - rational_subgroups.min()
-        r_bar = r.mean()
+        r_bar = r.mean() if groups_for_limits is None else r[groups_for_limits].mean()
         antibias_D4 = self.n.apply(factors.get_D4) if allow_variable_subgroup_size else factors.get_D4(n=self.n)
         self.r = SPCTrace(
             data = r,
