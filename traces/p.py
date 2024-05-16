@@ -13,7 +13,7 @@ import spc.factors as factors
 
 
 class PTrace(SPCTrace):
-    def __init__(self, data:pd.Series, data_column:str, grouper:str, subgroup_size:Optional[int]=None, reset_grouped_index:bool=False, xaxis_proxy:Optional[pd.Series]=None):
+    def __init__(self, data:pd.DataFrame, data_column:str, grouper:str, subgroup_size:Optional[int]=None, reset_grouped_index:bool=False, xaxis_proxy:Optional[pd.Series]=None):
         #TODO: allow variable sample sizes
         allow_variable_subgroup_size = subgroup_size is None
 
