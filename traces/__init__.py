@@ -223,9 +223,9 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
     
     # If control limits have been defined for variable subgroup size, draw them as "staircase" lines
     if isinstance(ucl, pd.Series):
-        fig.add_trace(go.Scatter(x=ucl.index, y=ucl, mode='lines', line=dict(width=2, dash='dash', color='grey'), showlegend=False,  line_shape='hvh'), row=row_number, col=column_number)
+        fig.add_trace(go.Scatter(x=ucl.index, y=ucl, mode='lines', line=dict(width=2, dash='dash', color='grey'), showlegend=False,  line_shape='hvh', hoverinfo='none'), row=row_number, col=column_number)
     if isinstance(lcl, pd.Series):
-        fig.add_trace(go.Scatter(x=lcl.index, y=lcl, mode='lines', line=dict(width=2, dash='dash', color='grey'), showlegend=False,  line_shape='hvh'), row=row_number, col=column_number)
+        fig.add_trace(go.Scatter(x=lcl.index, y=lcl, mode='lines', line=dict(width=2, dash='dash', color='grey'), showlegend=False,  line_shape='hvh', hoverinfo='none'), row=row_number, col=column_number)
 
     # Draw H-lines
     for value, line_dict, label in [
@@ -236,5 +236,11 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
                 + ([(lsl, dict(width=2, dash='dot', color='grey'), 'LSL'),] if not any((lsl is None, np.isneginf(lsl or np.nan))) else []) \
                 + ([(usl, dict(width=2, dash='dot', color='grey'), 'USL'),] if not any((usl is None, np.isposinf(usl or np.nan))) else []) :
         fig.add_hline(y=value, line=line_dict, annotation_text=f"{label}: {value:.04g}", row=row_number, col=column_number)
+    
+    fig.update_layout(
+        hovermode='x unified',
+        xaxis_hoverformat=None,
+        hoverlabel=dict(bgcolor='rgba(0, 0, 0, 0.75)', font=dict(color='white', size=10))
+    )
 
 

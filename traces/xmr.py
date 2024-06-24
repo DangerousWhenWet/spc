@@ -75,8 +75,11 @@ class XMRTraces:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
 
         # Plot the upper and lower traces
+        # HACK: for plotly.js-related reasons (???), appending the element `<extra></extra>` to the hovertemplate string will prevent hoverlabel
+        # from displaying the index of the trace when hovermode is set to 'x unified' or 'y unified'.
+        HOVERHACK = '<extra></extra>'
         for trace, row_number, clamp_limits, lsl, usl in [(self.x, 1, None, lsl, usl), (self.mr, 2, (0, float('Infinity')), None, None)]:
-            draw_spc_plotly(fig, trace, show_weco_rules, row_number, lsl=lsl, usl=usl, clamp_control_limits=clamp_limits, customdata=hover_customdata[row_number-1], hovertemplate=hover_template[row_number-1], **kwargs)
+            draw_spc_plotly(fig, trace, show_weco_rules, row_number, lsl=lsl, usl=usl, clamp_control_limits=clamp_limits, customdata=hover_customdata[row_number-1], hovertemplate=hover_template[row_number-1] + HOVERHACK, **kwargs)
 
         return fig
 
