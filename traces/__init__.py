@@ -209,9 +209,13 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
     else:
         rule1_points = pd.Series([np.nan]).reindex_like(trace.data)
 
+    # actual data trace here
     rule1_marker_colors = rule1_points.notna().replace({True: 'red', False: 'green'})
     fig.add_trace(go.Scatter(
-        x=trace.data.index, y=trace.data, showlegend=False, marker_line_color=rule1_marker_colors, marker_line_width=2, **kwargs
+        x=trace.data.index, y=trace.data,
+        showlegend=False, marker_line_color=rule1_marker_colors, marker_line_width=2,
+        connectgaps=True,
+        **kwargs
     ), row=row_number, col=column_number)
     
     if clamp_control_limits:
@@ -228,6 +232,9 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
         fig.add_trace(go.Scatter(x=lcl.index, y=lcl, mode='lines', line=dict(width=2, dash='dash', color='grey'), showlegend=False,  line_shape='hvh', hoverinfo='none'), row=row_number, col=column_number)
 
     # Draw H-lines
+    is_pchart = trace.__class__.__name__ == 'PTrace'
+    def format_value(value, as_percent=False):
+        return f"{value:.04g}" if not as_percent else f"{value:.01%}"
     for value, line_dict, label in [
                 (trace.centerline, dict(width=3, dash='solid', color='grey'), 'Average'),
             ] \
@@ -235,7 +242,11 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
                 + ([(lcl, dict(width=2, dash='dash', color='grey'), 'LCL')] if not isinstance(lcl, pd.Series) else []) \
                 + ([(lsl, dict(width=2, dash='dot', color='grey'), 'LSL'),] if not any((lsl is None, np.isneginf(lsl or np.nan))) else []) \
                 + ([(usl, dict(width=2, dash='dot', color='grey'), 'USL'),] if not any((usl is None, np.isposinf(usl or np.nan))) else []) :
-        fig.add_hline(y=value, line=line_dict, annotation_text=f"{label}: {value:.04g}", row=row_number, col=column_number)
+        fig.add_hline(
+            y=value, line=line_dict,
+            annotation_text=f"{label}: {format_value(value, as_percent=(is_pchart and label=='Average'))}",
+            row=row_number, col=column_number
+        )
     
     fig.update_layout(
         hovermode='x unified',
