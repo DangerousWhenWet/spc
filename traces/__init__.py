@@ -227,9 +227,22 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
     
     # If control limits have been defined for variable subgroup size, draw them as "staircase" lines
     if isinstance(ucl, pd.Series):
-        fig.add_trace(go.Scatter(x=ucl.index, y=ucl, mode='lines', line=dict(width=2, dash='dash', color='grey'), showlegend=False,  line_shape='hvh', hoverinfo='none'), row=row_number, col=column_number)
+        fig.add_trace(
+            go.Scatter(
+                x=ucl.index, y=ucl,
+                mode='lines', line=dict(width=2, dash='dash', color='grey'),
+                showlegend=False,  line_shape='hvh', hoverinfo='none', connectgaps=True
+            ),
+            row=row_number, col=column_number
+            )
     if isinstance(lcl, pd.Series):
-        fig.add_trace(go.Scatter(x=lcl.index, y=lcl, mode='lines', line=dict(width=2, dash='dash', color='grey'), showlegend=False,  line_shape='hvh', hoverinfo='none'), row=row_number, col=column_number)
+        fig.add_trace(
+            go.Scatter(
+                x=lcl.index, y=lcl,
+                mode='lines', line=dict(width=2, dash='dash', color='grey'),
+                showlegend=False,  line_shape='hvh', hoverinfo='none', connectgaps=True
+            ),
+        row=row_number, col=column_number)
 
     # Draw H-lines
     is_pchart = trace.__class__.__name__ == 'PTrace'
