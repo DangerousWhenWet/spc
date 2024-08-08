@@ -42,7 +42,7 @@ class PTrace(SPCTrace):
         hover_template = hover_template or [None]
 
         y_title = '<b>' + (f"{yaxis_title}, " if yaxis_title else '') + """%-conforms""" + '</b>'
-        fig = make_subplots(rows=1,cols=1)
+        fig = make_subplots(rows=1,cols=1, specs=[[{'secondary_y': True}]])
 
         # Set other cosmetic/presentation stuff
         fig.update_layout(

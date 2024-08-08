@@ -68,15 +68,16 @@ class XRTraces:
         hover_template = hover_template or [None, None]
 
         y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """<span style="text-decoration:overline">x</span>""" + '</b>'
-        y2_title = '<b>' + (f"{yaxis_titles[1]}, " if yaxis_titles else '') + r"R" + '</b>'
+        y3_title = '<b>' + (f"{yaxis_titles[1]}, " if yaxis_titles else '') + r"R" + '</b>'
         fig = make_subplots(
             rows=2, row_heights=[0.5, 0.5], cols=1, shared_xaxes=True, vertical_spacing=0.02,
+            specs=[[{'secondary_y': True}], [{}]]
         )
 
         # Set other cosmetic/presentation stuff
         fig.update_layout(
             template=plotly_theme, margin={'l':0, 'r':0, 't':0, 'b':0}, paper_bgcolor='rgba(0,0,0,0)',
-            yaxis_title=y1_title, yaxis2_title=y2_title,
+            yaxis_title=y1_title, yaxis3_title=y3_title,
         )
 
         if self.xaxis_proxy is not None:
