@@ -378,26 +378,5 @@ def fetch_from_lookup_table(symbol:str, n:int) -> Optional[float]:
         warnings.warn("Lookup table has not been computed. Calculating all factors on-the-fly, which may be very slow. (Use `generate_lookup_table`.)", ComputationWarning)
     return None
 
-def calculate_spc_factors(n: int) -> Dict[str, float]:
-    factors = {
-        'A': get_A(n),
-        'A2': get_A2(n),
-        'A3': get_A3(n),
-        'B3': get_B3(n),
-        'B4': get_B4(n),
-        'B5': get_B5(n),
-        'B6': get_B6(n),
-        'D1': get_D1(n),
-        'D2': get_D2(n),
-        'D3': get_D3(n),
-        'D4': get_D4(n),
-        'E2': get_E2(n),
-        'E3': get_E3(n),
-        'd2': get_d2(n),
-        'd3': get_d3(n),
-        'c4': get_c4(n)
-    }
-    return factors
-
 if __name__ == "__main__":
     generate_lookup_table(n_lower=2, n_upper=400)
