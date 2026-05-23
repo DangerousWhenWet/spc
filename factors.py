@@ -145,7 +145,7 @@ def get_B3(n:int) -> float:
     '''
     if n < 2: return float('nan')
 
-    if cached_value := fetch_from_lookup_table('c4', n):
+    if cached_value := fetch_from_lookup_table('B3', n):
         return cached_value
     else:
         c4 = get_c4(n)

@@ -171,6 +171,7 @@ def draw_spc_matplotlib(ax, trace:SPCTrace, y_label:Optional[str]=None):
 
 
 def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List[int]]=None, row_number:int=1, column_number:int=1, clamp_control_limits:Optional[Tuple[float]]=None, lsl:Optional[float]=None, usl:Optional[float]=None, **kwargs):
+    show_weco_rules = show_weco_rules or []
     if 2 in show_weco_rules:
         if event_slices := list(trace.get_weco_event_slices(2)):
             points = pd.concat( event_slices )

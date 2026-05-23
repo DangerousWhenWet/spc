@@ -51,6 +51,8 @@ class XMRTraces:
             **kwargs
         ):
         show_weco_rules = show_weco_rules or []
+        hover_customdata = hover_customdata or [None, None]
+        hover_template = hover_template or [None, None]
 
         y1_title = '<b>' + (f"{yaxis_titles[0]}, " if yaxis_titles else '') + """X""" + '</b>'
         y2_title = '<b>' + (f"{yaxis_titles[1]}, " if yaxis_titles else '') + r"mR" + '</b>'
@@ -79,7 +81,7 @@ class XMRTraces:
         # from displaying the index of the trace when hovermode is set to 'x unified' or 'y unified'.
         HOVERHACK = '<extra></extra>'
         for trace, row_number, clamp_limits, lsl, usl in [(self.x, 1, None, lsl, usl), (self.mr, 2, (0, float('Infinity')), None, None)]:
-            draw_spc_plotly(fig, trace, show_weco_rules, row_number, lsl=lsl, usl=usl, clamp_control_limits=clamp_limits, customdata=hover_customdata[row_number-1], hovertemplate=hover_template[row_number-1] + HOVERHACK, **kwargs)
+            draw_spc_plotly(fig, trace, show_weco_rules, row_number, lsl=lsl, usl=usl, clamp_control_limits=clamp_limits, customdata=hover_customdata[row_number-1], hovertemplate=(hover_template[row_number-1] or '') + HOVERHACK, **kwargs)
 
         return fig
 

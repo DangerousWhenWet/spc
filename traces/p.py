@@ -66,7 +66,7 @@ class PTrace(SPCTrace):
         # HACK: for plotly.js-related reasons (???), appending the element `<extra></extra>` to the hovertemplate string will prevent hoverlabel
         # from displaying the index of the trace when hovermode is set to 'x unified' or 'y unified'.
         HOVERHACK = '<extra></extra>'
-        draw_spc_plotly(fig, self, show_weco_rules, clamp_control_limits=(0.0, 1.0), lsl=lsl, usl=usl, hovertemplate=hover_template[0] + HOVERHACK, customdata=hover_customdata[0], **kwargs)
+        draw_spc_plotly(fig, self, show_weco_rules, clamp_control_limits=(0.0, 1.0), lsl=lsl, usl=usl, hovertemplate=(hover_template[0] or '') + HOVERHACK, customdata=hover_customdata[0], **kwargs)
 
         return fig
 
