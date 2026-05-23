@@ -84,7 +84,7 @@ def get_c4(n:int) -> float:
         a = math.sqrt(2/(n-1))
         b = math.factorial(int(n/2-1)) if not n%2 else fractional_factorial(n/2-1)
         c = math.factorial(int((n-1)/2-1)) if not (n-1)%2 else fractional_factorial((n-1)/2-1)
-        return Decimal(a) * Decimal(b) / Decimal(c)
+        return float(Decimal(a) * Decimal(b) / Decimal(c))
 
 
 def get_A(n:int) -> float:
@@ -132,7 +132,7 @@ def get_A3(n:int) -> float:
     if cached_value := fetch_from_lookup_table('A3', n):
         return cached_value
     else:
-        return 3 / (get_c4(n) * Decimal(math.sqrt(n)))
+        return 3 / (get_c4(n) * math.sqrt(n))
 
 
 def get_B3(n:int) -> float:
@@ -149,7 +149,7 @@ def get_B3(n:int) -> float:
         return cached_value
     else:
         c4 = get_c4(n)
-        return max(0.0, 1 - (3/c4) * Decimal(math.sqrt(1 - c4**2)))
+        return max(0.0, 1 - (3/c4) * math.sqrt(1 - c4**2))
 
 
 def get_B4(n:int) -> float:
@@ -166,7 +166,7 @@ def get_B4(n:int) -> float:
         return cached_value
     else:
         c4 = get_c4(n)
-        return 1 + (3/c4) * Decimal(math.sqrt(1 - c4**2))
+        return 1 + (3/c4) * math.sqrt(1 - c4**2)
 
 
 def get_B5(n:int) -> float:
@@ -183,7 +183,7 @@ def get_B5(n:int) -> float:
         return cached_value
     else:
         c4 = get_c4(n)
-        return max(0.0, c4 - 3 * Decimal(math.sqrt(1 - c4**2)))
+        return max(0.0, c4 - 3 * math.sqrt(1 - c4**2))
 
 
 def get_B6(n:int) -> float:
@@ -200,7 +200,7 @@ def get_B6(n:int) -> float:
         return cached_value
     else:
         c4 = get_c4(n)
-        return c4 + 3 * Decimal(math.sqrt(1 - c4**2))
+        return c4 + 3 * math.sqrt(1 - c4**2)
 
 
 def get_D1(n:int) -> float:
