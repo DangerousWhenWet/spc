@@ -13,16 +13,18 @@ import spc.factors as factors
 
 
 class PTrace(SPCTrace):
+    _proportion_chart = True
+
     def __init__(self, data:pd.DataFrame, data_column:str, grouper:str, subgroup_size:Optional[int]=None, reset_grouped_index:bool=False, xaxis_proxy:Optional[pd.Series]=None):
-        #TODO: allow variable sample sizes
         allow_variable_subgroup_size = subgroup_size is None
 
-        self.n = data.groupby(grouper).size() if allow_variable_subgroup_size else subgroup_size
-        self.data = data.groupby(grouper)[data_column].mean()
+        n = data.groupby(grouper).size() if allow_variable_subgroup_size else subgroup_size
+        grouped_data = data.groupby(grouper)[data_column].mean()
         if reset_grouped_index:
-            self.data.reset_index(drop=True, inplace=True)
-        self.centerline = self.data.mean()
-        self.sigma = np.sqrt(  (self.centerline * (1 - self.centerline) ) / self.n ) if allow_variable_subgroup_size else math.sqrt( self.centerline * (1 - self.centerline) / self.n )
+            grouped_data.reset_index(drop=True, inplace=True)
+        centerline = grouped_data.mean()
+        sigma = np.sqrt((centerline * (1 - centerline)) / n) if allow_variable_subgroup_size else math.sqrt(centerline * (1 - centerline) / n)
+        super().__init__(data=grouped_data, centerline=centerline, sigma=sigma, n=n)
         self.xaxis_proxy = xaxis_proxy
 
     def to_plotly(
@@ -62,11 +64,7 @@ class PTrace(SPCTrace):
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>")
 
-        # Plot the upper and lower traces
-        # HACK: for plotly.js-related reasons (???), appending the element `<extra></extra>` to the hovertemplate string will prevent hoverlabel
-        # from displaying the index of the trace when hovermode is set to 'x unified' or 'y unified'.
-        HOVERHACK = '<extra></extra>'
-        draw_spc_plotly(fig, self, show_weco_rules, clamp_control_limits=(0.0, 1.0), lsl=lsl, usl=usl, hovertemplate=(hover_template[0] or '') + HOVERHACK, customdata=hover_customdata[0], **kwargs)
+        draw_spc_plotly(fig, self, show_weco_rules, clamp_control_limits=(0.0, 1.0), lsl=lsl, usl=usl, hovertemplate=hover_template[0], customdata=hover_customdata[0], **kwargs)
 
         return fig
 

@@ -23,7 +23,8 @@ class XSTraces:
         self.s = SPCTrace(
             data = s,
             centerline = s_bar,
-            sigma = (antibias_b4 * s_bar - s_bar)/3
+            sigma = (antibias_b4 * s_bar - s_bar)/3,
+            n = self.n,
         )
 
         x_bar = rational_subgroups.mean()
@@ -32,15 +33,14 @@ class XSTraces:
         self.x = SPCTrace(
             data = x_bar,
             centerline = grand_mean,
-            sigma = (antibias_a3 * s_bar)/3
+            sigma = (antibias_a3 * s_bar)/3,
+            n = self.n,
         )
 
         if reset_grouped_index:
             self.x.data.reset_index(drop=True, inplace=True)
             self.s.data.reset_index(drop=True, inplace=True)
             self.n.reset_index(drop=True, inplace=True)
-        self.s.n = self.n
-        self.x.n = self.n
         self.xaxis_proxy = xaxis_proxy
 
 
@@ -89,12 +89,8 @@ class XSTraces:
         if xaxis_title:
             fig.update_xaxes(title_text=f"<b>{xaxis_title}</b>", row=2)
 
-        # Plot the upper and lower traces
-        # HACK: for plotly.js-related reasons (???), appending the element `<extra></extra>` to the hovertemplate string will prevent hoverlabel
-        # from displaying the index of the trace when hovermode is set to 'x unified' or 'y unified'.
-        HOVERHACK = '<extra></extra>'
         for trace, row_number, lsl, usl in ((self.x, 1, lsl, usl), (self.s, 2, None, None)):
-            draw_spc_plotly(fig, trace, show_weco_rules, row_number, lsl=lsl, usl=usl, hovertemplate=(hover_template[row_number-1] or '') + HOVERHACK, customdata=hover_customdata[row_number-1], **kwargs)
+            draw_spc_plotly(fig, trace, show_weco_rules, row_number, lsl=lsl, usl=usl, hovertemplate=hover_template[row_number-1], customdata=hover_customdata[row_number-1], **kwargs)
 
         return fig
 

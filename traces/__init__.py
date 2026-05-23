@@ -34,12 +34,14 @@ class SPCTrace:
         4: dict(color=hex_to_rgba(D3[9], 0.500), width=12)
     }
 
-    def __init__(self, data:pd.Series, centerline:float, sigma:Union[float, pd.Series], name:Optional[str]=None):
+    _proportion_chart = False
+
+    def __init__(self, data:pd.Series, centerline:float, sigma:Union[float, pd.Series], name:Optional[str]=None, n:Optional[Union[int, 'pd.Series']]=None):
         self.data = data
         self.centerline = centerline
         self.sigma = sigma
-        self.name=name
-        self.n = None # <-- Overwrite this in subclasses for traces that deal with rational subgroups
+        self.name = name
+        self.n = n
 
     
     def get_zone(self, zone:Literal['a', 'b', 'c', 'center']) -> Tuple[Union[pd.Series, float], Union[pd.Series, float]]:
@@ -211,11 +213,14 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
         rule1_points = pd.Series([np.nan]).reindex_like(trace.data)
 
     # actual data trace here
+    # appending <extra></extra> to hovertemplate prevents plotly from displaying the trace index in the hoverlabel when hovermode='x unified'
+    hovertemplate = (kwargs.pop('hovertemplate', None) or '') + '<extra></extra>'
     rule1_marker_colors = rule1_points.notna().replace({True: 'red', False: 'green'})
     fig.add_trace(go.Scatter(
         x=trace.data.index, y=trace.data,
         showlegend=False, marker_line_color=rule1_marker_colors, marker_line_width=2,
         connectgaps=True,
+        hovertemplate=hovertemplate,
         **kwargs
     ), row=row_number, col=column_number)
     
@@ -246,7 +251,7 @@ def draw_spc_plotly(fig:go.Figure, trace:SPCTrace, show_weco_rules:Optional[List
         row=row_number, col=column_number)
 
     # Draw H-lines
-    is_pchart = trace.__class__.__name__ == 'PTrace'
+    is_pchart = trace._proportion_chart
     def format_value(value, as_percent=False):
         return f"{value:.04g}" if not as_percent else f"{value:.01%}"
     for value, line_dict, label in [
