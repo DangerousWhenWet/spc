@@ -19,21 +19,21 @@ class XSTraces:
         rational_subgroups = data.groupby(grouper)[data_column]
         s = rational_subgroups.std()
         s_bar = s.mean()
-        antibias_b4 = self.n.apply(lambda n: float(factors.get_B4(n))) if allow_variable_subgroup_size else float(factors.get_B4(n=self.n))
+        antibias_B4 = self.n.apply(lambda n: float(factors.get_B4(n))) if allow_variable_subgroup_size else float(factors.get_B4(n=self.n))
         self.s = SPCTrace(
             data = s,
             centerline = s_bar,
-            sigma = (antibias_b4 * s_bar - s_bar)/3,
+            sigma = (antibias_B4 * s_bar - s_bar)/3,
             n = self.n,
         )
 
         x_bar = rational_subgroups.mean()
         grand_mean = x_bar.mean()
-        antibias_a3 = self.n.apply(lambda n: float(factors.get_A3(n))) if allow_variable_subgroup_size else float(factors.get_A3(n=self.n))
+        antibias_A3 = self.n.apply(lambda n: float(factors.get_A3(n))) if allow_variable_subgroup_size else float(factors.get_A3(n=self.n))
         self.x = SPCTrace(
             data = x_bar,
             centerline = grand_mean,
-            sigma = (antibias_a3 * s_bar)/3,
+            sigma = (antibias_A3 * s_bar)/3,
             n = self.n,
         )
 

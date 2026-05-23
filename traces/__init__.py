@@ -166,7 +166,7 @@ def draw_spc_matplotlib(ax, trace:SPCTrace, y_label:Optional[str]=None):
         zone_low, zone_high = trace.get_zone(zone)
         ax.axhline(zone_high, color=definition['color'], linestyle=definition['linestyle'], label=f"Zone {zone.upper()}" if zone in 'abc' else None)
         if zone in 'abc':
-            ax.axhline(zone_low, color=definition['color'], linestyle=definition['linestyle'], label=f"Zone {zone.upper()}")
+            ax.axhline(zone_low, color=definition['color'], linestyle=definition['linestyle'])
     ax.plot(trace.data.index, trace.data, marker='o', color='black')
     if y_label:
         ax.set_ylabel(y_label)
